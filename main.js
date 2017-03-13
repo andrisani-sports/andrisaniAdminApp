@@ -115,7 +115,7 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     var admin = nga
         .application('Byron Katie Admin')
         .baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/cobject/v1/');
-
+ 
     // ==================================================
     // add entities
     // ==================================================

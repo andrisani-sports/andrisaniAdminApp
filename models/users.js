@@ -35,8 +35,8 @@ module.exports = function(nga,users,roles) {
     .title('"{{ entry.values.displayName }}" Profile')
     .fields([
         nga.field('id'),
-        nga.field('givenrole','change_role_dropdown')
-            .label('Role'),
+        // nga.field('givenrole','change_role_dropdown')
+        //     .label('Role'),
         nga.field('dt_create', 'date').label('Created').format('short'),
         	nga.field('dt_update', 'date').label('Last Update').format('short'),
         nga.field('firstName'),
@@ -58,15 +58,15 @@ module.exports = function(nga,users,roles) {
         nga.field('firstName'),
         nga.field('lastName'),
         nga.field('displayName'),
-        nga.field('email','stamplay_email_field')
-            .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
-            .cssClasses('hidden-email'),
+        // nga.field('email','stamplay_email_field')
+        //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
+        //     .cssClasses('hidden-email'),
         nga.field('publicEmail')
             .validation({ required: true })
             .label('Email'),
         nga.field('password'),
-        nga.field('givenrole','change_role_dropdown')
-            .label('Role'),
+        // nga.field('givenrole','change_role_dropdown')
+        //     .label('Role'),
         nga.field('paid', 'boolean')
         	.choices([
         		{ value: true, label: 'Yes'},
