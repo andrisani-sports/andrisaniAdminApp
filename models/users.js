@@ -28,7 +28,7 @@ module.exports = function(nga,users,roles) {
             .template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')
         ,nga.field('email')
             .label('Email')
-    ]);;
+    ]);
 
     // SHOW VIEW
     users.showView()

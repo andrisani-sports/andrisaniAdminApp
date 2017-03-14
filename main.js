@@ -12,7 +12,7 @@ var myApp = angular.module('myApp',
  * API AUTHENTICATION
  ***************************************/
 
-// require('./globalAdmin/apis/stamplay/auth')(myApp);
+// require('./custom/apis/stamplay/auth')(myApp);
 
 /***************************************
  * INTERCEPTOR FUNCTIONS
@@ -85,10 +85,6 @@ myApp.controller('username', ['$scope', '$window', function($scope, $window) { /
  * use of 'import': http://stackoverflow.com/questions/36451969/custom-type-the-field-class-is-injected-as-an-object-not-a-function
  ***************************************/
 
-// Matrix Editor - displaying the array of strings field from Stamplay
-// import MatrixEditorFieldConfig from './globalAdmin/customFields/matrix_editor/matrix_editor_field_config';
-// import MatrixEditorFieldView from './globalAdmin/customFields/matrix_editor/matrix_editor_field_view';
-// import MatrixEditorDirective from './globalAdmin/customFields/matrix_editor/matrix_editor_directive';
 
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function(nga) {
@@ -97,7 +93,7 @@ myApp.config(['NgAdminConfigurationProvider', function(nga) {
 myApp.config(['FieldViewConfigurationProvider', function(fvp) {
     // fvp.registerFieldView('matrix_editor', MatrixEditorFieldView);
 }]);
-// myApp.directive('matrixEditor', MatrixEditorDirective);
+
   
 
 /***************************************
@@ -113,20 +109,20 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     // ==================================================
     
     var admin = nga
-        .application('Byron Katie Admin')
-        .baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/cobject/v1/');
+        .application('Andrisani Sports')
+        .baseApiUrl('https://pitchingdata.stamplayapp.com/api/cobject/v1/');
  
     // ==================================================
     // add entities
     // ==================================================
 
-    // roles (https://online-school-for-the-work.stamplayapp.com/api/user/v1/roles)
+    // roles (https://pitchingdata.stamplayapp.com/api/user/v1/roles)
     var createRole = require('./models/role');
-    var roles = nga.entity('roles').baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
+    var roles = nga.entity('roles').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
     
     // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
     var createUser = require('./models/users');
-    var userEntity = nga.entity('users').baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/user/v1/');
+    var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
     
     
 
@@ -141,7 +137,6 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     admin.menu(nga.menu()
         .addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard'))
         .addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
-        .addChild(nga.menu().title('BK Content').icon('<span class="glyphicon glyphicon-book"></span>&nbsp;'))
     );
 
 /***************************************
@@ -155,7 +150,6 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
  * CUSTOM DASHBOARD
  * http://ng-admin-book.marmelab.com/doc/Dashboard.html
  ***************************************/
-
 
 
 /***************************************

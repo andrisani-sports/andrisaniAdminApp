@@ -434,7 +434,7 @@ var myApp = angular.module('myApp', ['ng-admin']);
  * API AUTHENTICATION
  ***************************************/
 
-// require('./globalAdmin/apis/stamplay/auth')(myApp);
+// require('./custom/apis/stamplay/auth')(myApp);
 
 /***************************************
  * INTERCEPTOR FUNCTIONS
@@ -505,11 +505,6 @@ myApp.controller('username', ['$scope', '$window', function ($scope, $window) {
  * use of 'import': http://stackoverflow.com/questions/36451969/custom-type-the-field-class-is-injected-as-an-object-not-a-function
  ***************************************/
 
-// Matrix Editor - displaying the array of strings field from Stamplay
-// import MatrixEditorFieldConfig from './globalAdmin/customFields/matrix_editor/matrix_editor_field_config';
-// import MatrixEditorFieldView from './globalAdmin/customFields/matrix_editor/matrix_editor_field_view';
-// import MatrixEditorDirective from './globalAdmin/customFields/matrix_editor/matrix_editor_directive';
-
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function (nga) {
   // nga.registerFieldType('matrix_editor', MatrixEditorFieldConfig);
@@ -517,8 +512,6 @@ myApp.config(['NgAdminConfigurationProvider', function (nga) {
 myApp.config(['FieldViewConfigurationProvider', function (fvp) {
   // fvp.registerFieldView('matrix_editor', MatrixEditorFieldView);
 }]);
-// myApp.directive('matrixEditor', MatrixEditorDirective);
-
 
 /***************************************
  * DEFINE DATA ENTITIES
@@ -530,19 +523,19 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
   // create the default admin application
   // ==================================================
 
-  var admin = nga.application('Byron Katie Admin').baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/cobject/v1/');
+  var admin = nga.application('Andrisani Sports').baseApiUrl('https://pitchingdata.stamplayapp.com/api/cobject/v1/');
 
   // ==================================================
   // add entities
   // ==================================================
 
-  // roles (https://online-school-for-the-work.stamplayapp.com/api/user/v1/roles)
+  // roles (https://pitchingdata.stamplayapp.com/api/user/v1/roles)
   var createRole = require('./models/role');
-  var roles = nga.entity('roles').baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
+  var roles = nga.entity('roles').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
 
   // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
   var createUser = require('./models/users');
-  var userEntity = nga.entity('users').baseApiUrl('https://online-school-for-the-work.stamplayapp.com/api/user/v1/');
+  var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
 
   // ADD TO ADMIN OBJECT
   admin.addEntity(createRole(nga, roles));
@@ -552,7 +545,7 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
    * CUSTOM MENU
    ***************************************/
 
-  admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().title('BK Content').icon('<span class="glyphicon glyphicon-book"></span>&nbsp;')));
+  admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')));
 
   /***************************************
    * CUSTOM HEADER
@@ -600,7 +593,7 @@ module.exports = function (nga, role) {
 module.exports = function (nga, users, roles) {
 
     // LIST VIEW
-    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }]), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);;
+    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }]), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
 
     // SHOW VIEW
     users.showView().title('"{{ entry.values.displayName }}" Profile').fields([nga.field('id'),

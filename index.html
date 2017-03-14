@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>Byron Katie Admin</title>
+    <title>Andrisani Sports</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     
@@ -58,7 +58,8 @@
             if(window.localStorage[url+"-jwt"]){
               window.localStorage.removeItem(url + "-jwt");
             }
-      	  	window.localStorage.removeItem('http://ngadmin-jwt');
+      	  	// window.localStorage.removeItem('http://ngadmin-jwt');
+            window.localStorage.removeItem(url + "-jwt");
       	  	window.location.href = "./login.html";
       	  }
       	});    
