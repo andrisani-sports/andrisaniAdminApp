@@ -1,21 +1,22 @@
+@import url('https://fonts.googleapis.com/css?family=Lobster');
+
 /* MAIN STYLES */
 body { background-color: #f2f2f2; }
-/*#page-wrapper { background: #ffffff; border-left: 1px solid #0B0014; }*/
-a, a:visited { color: #596672; }
+a, a:visited { color: #7a848e; }
 
 .tag-item a.multiple.ng-scope:hover { text-decoration: none; }
 .capitalize { text-transform: capitalize; }
 
 /* HEADER STYLES */
-#header-nav{ background-color: #95abbe; }
-#header-nav a.navbar-brand{ color: #ffffff; }
+#header-nav{ background-color: #505b66; }
+#header-nav a.navbar-brand{ font-family: 'Lobster', cursive; color: #ffffff; }
 #header-nav .nav>li>a.username { padding: 15px; color: #ffffff !important; cursor: pointer; }
 #header-nav .nav>li>a.username:hover,
 #header-nav .nav>li>a.username:focus,
 #header-nav .nav>li>a.username:active, .nav .open>a, .nav .open>a:focus, .nav .open>a:hover { background-color: #8699ab !important; }
 
 /* PAGE STYLES */
-.page-header h1 { color: #d44d5c; }
+.page-header h1 { font-family: 'Lobster', cursive; color: #7a848e; }
 
 
 /*----------------------------------------------------------------------
@@ -38,7 +39,7 @@ body#login-page .form-header {
 	text-align: center;
 }
 
-body#login-page .main h1 { font-size: 28px; color: #d44d5c; }
+body#login-page .main h1 { font-family: 'Lobster', cursive; font-size: 28px; color: #596672; }
 
 .copy-right { margin-top: 60px; color: #596672; text-align: center; }
 
@@ -60,11 +61,12 @@ form#admin-login button.btn.btn-default { margin-top: 8px; width: 100%; height: 
 
 form#admin-login button.btn.btn-default:hover { background-color: #8699ab; }
 
-.btn-link { color: #95abbe; }
+.btn-link { color: #7a848e; }
+.btn.btn-default { color: #7a848e; }
 .btn.btn-default:hover { color: #ffffff; background-color: #8699ab; }
 .btn.btn-primary { color: #ffffff; background-color: #95abbe; border-color: #8699ab; }
 .btn.btn-primary:hover { background-color: #8699ab; }
-.btn-danger { color: #fff; background-color: #d44d5c; border-color: #d43f3a; }
+.btn-danger { color: #fff; background-color: #d9534f; border-color: #d43f3a; }
 
 .hidden-email{display:none;}
 
@@ -82,6 +84,7 @@ form#admin-login button.btn.btn-default:hover { background-color: #8699ab; }
 }
 
 /*  TAB STYLES  */
+.navbar-default .navbar-toggle { background: #ddd; }
 
 .nav-tabs {
     margin-bottom: -1px;

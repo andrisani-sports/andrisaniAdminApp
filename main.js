@@ -123,12 +123,27 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
     var createUser = require('./models/users');
     var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
+
+    // teams
+    var createTeams = require('./models/teams');
+    var teams = nga.entity('teams');
+
+    // team members
+    var createTeamMembers = require('./models/team_members');
+    var team_members = nga.entity('team_members');
+
+    // pitchers
+    var createPitchers = require('./models/pitchers');
+    var pitchers = nga.entity('pitchers');
     
     
 
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga,roles));
     admin.addEntity(createUser(nga,userEntity,roles));
+    admin.addEntity(createTeams(nga,teams,userEntity));
+    admin.addEntity(createTeamMembers(nga,team_members,teams,userEntity));
+    admin.addEntity(createPitchers(nga,pitchers,teams,userEntity));
     
 /***************************************
  * CUSTOM MENU
@@ -137,6 +152,9 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     admin.menu(nga.menu()
         .addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard'))
         .addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
+        .addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
+        .addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
+        .addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
     );
 
 /***************************************
@@ -149,7 +167,7 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
           '<span class="icon-bar"></span>' +
           '<span class="icon-bar"></span>' +
         '</button>' +
-        '<a class="navbar-brand" href="#" ng-click="appController.displayHome()"><img src="images/bki-logo35x40.png" align="left" style="margin:-8px 5px 0 0;" />Byron Katie Admin</a>' +
+        '<a class="navbar-brand" href="#" ng-click="appController.displayHome()">Andrisani Admin</a>' +
     '</div>' +
 
     '<ul class="nav navbar-top-links navbar-right hidden-xs">' +

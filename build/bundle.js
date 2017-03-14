@@ -65,7 +65,7 @@ module.exports = function (admin) {
     return admin;
 };
 
-},{"humane-js":9}],2:[function(require,module,exports){
+},{"humane-js":12}],2:[function(require,module,exports){
 'use strict';
 
 module.exports = function (myApp) {
@@ -537,20 +537,35 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     var createUser = require('./models/users');
     var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
 
+    // teams
+    var createTeams = require('./models/teams');
+    var teams = nga.entity('teams');
+
+    // team members
+    var createTeamMembers = require('./models/team_members');
+    var team_members = nga.entity('team_members');
+
+    // pitchers
+    var createPitchers = require('./models/pitchers');
+    var pitchers = nga.entity('pitchers');
+
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga, roles));
     admin.addEntity(createUser(nga, userEntity, roles));
+    admin.addEntity(createTeams(nga, teams, userEntity));
+    admin.addEntity(createTeamMembers(nga, team_members, teams, userEntity));
+    admin.addEntity(createPitchers(nga, pitchers, teams, userEntity));
 
     /***************************************
      * CUSTOM MENU
      ***************************************/
 
-    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')));
+    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')));
 
     /***************************************
      * CUSTOM HEADER
      ***************************************/
-    var customHeaderTemplate = '<div class="navbar-header">' + '<button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '</button>' + '<a class="navbar-brand" href="#" ng-click="appController.displayHome()"><img src="images/bki-logo35x40.png" align="left" style="margin:-8px 5px 0 0;" />Byron Katie Admin</a>' + '</div>' + '<ul class="nav navbar-top-links navbar-right hidden-xs">' + '<li class="dropdown">' + '<a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">' + '<i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>' + '</a>' + '<ul class="dropdown-menu dropdown-user" role="menu">' + '<li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>' + '</ul>' + '</li>' + '</ul>';
+    var customHeaderTemplate = '<div class="navbar-header">' + '<button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '</button>' + '<a class="navbar-brand" href="#" ng-click="appController.displayHome()">Andrisani Admin</a>' + '</div>' + '<ul class="nav navbar-top-links navbar-right hidden-xs">' + '<li class="dropdown">' + '<a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">' + '<i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>' + '</a>' + '<ul class="dropdown-menu dropdown-user" role="menu">' + '<li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>' + '</ul>' + '</li>' + '</ul>';
 
     admin.header(customHeaderTemplate);
 
@@ -573,7 +588,32 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     nga.configure(admin);
 }]);
 
-},{"./custom/errorHandlers/admin":1,"./custom/errorHandlers/appLevel":2,"./custom/interceptors/stamplay":3,"./models/role":5,"./models/users":6,"admin-config/lib/Field/Field":7}],5:[function(require,module,exports){
+},{"./custom/errorHandlers/admin":1,"./custom/errorHandlers/appLevel":2,"./custom/interceptors/stamplay":3,"./models/pitchers":5,"./models/role":6,"./models/team_members":7,"./models/teams":8,"./models/users":9,"admin-config/lib/Field/Field":10}],5:[function(require,module,exports){
+'use strict';
+
+module.exports = function (nga, pitchers, teams, user) {
+
+	// LIST VIEW
+	pitchers.listView().title('All Pitchers').fields([nga.field('name'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).sortField('name').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	pitchers.showView().title('"{{ entry.values.name }}"').fields([nga.field('id'), nga.field('unique_id').label('Unique ID'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))
+	// nga.field('baselines')
+	]);
+
+	// CREATION VIEW
+	pitchers.creationView().title('Add Pitcher').fields([nga.field('name'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
+
+	// EDITION VIEW
+	pitchers.editionView().title('Edit "{{ entry.values.name }}"').fields(pitchers.creationView().fields());
+
+	// DELETION VIEW
+	pitchers.deletionView().title('Delete "{{ entry.values.name }}"');
+
+	return pitchers;
+};
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, role) {
@@ -587,22 +627,68 @@ module.exports = function (nga, role) {
     return role;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
+'use strict';
+
+module.exports = function (nga, team_members, teams, user) {
+
+	// LIST VIEW
+	team_members.listView().title('All Team Members').fields([nga.field('name'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).sortField('name').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	team_members.showView().title('"{{ entry.values.name }}"').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name'), nga.field('email', 'email'), nga.field('phone').label('Phone Number'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
+
+	// CREATION VIEW
+	team_members.creationView().title('Add Team Member').fields([nga.field('name'), nga.field('email', 'email'), nga.field('phone'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
+
+	// EDITION VIEW
+	team_members.editionView().title('Edit "{{ entry.values.name }}"').fields(teams.creationView().fields());
+
+	// DELETION VIEW
+	team_members.deletionView().title('Delete "{{ entry.values.name }}"');
+
+	return team_members;
+};
+
+},{}],8:[function(require,module,exports){
+'use strict';
+
+module.exports = function (nga, teams, user) {
+
+	// LIST VIEW
+	teams.listView().title('All Teams').fields([nga.field('name').label('Team Name'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).sortField('name').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('name').label('Team Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	teams.showView().title('"{{ entry.values.name }}" Team').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name'), nga.field('note', 'wysiwyg')]);
+
+	// CREATION VIEW
+	teams.creationView().title('Add Team').fields([nga.field('name'), nga.field('note', 'wysiwyg')]);
+
+	// EDITION VIEW
+	teams.editionView().title('Edit "{{ entry.values.name }}"').fields(teams.creationView().fields());
+
+	// DELETION VIEW
+	teams.deletionView().title('Delete "{{ entry.values.name }}"');
+
+	return teams;
+};
+
+},{}],9:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, users, roles) {
 
     // LIST VIEW
-    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
+    users.listView().fields([nga.field('displayName').label('Username'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
 
     // SHOW VIEW
     users.showView().title('"{{ entry.values.displayName }}" Profile').fields([nga.field('id'),
     // nga.field('givenrole','change_role_dropdown')
     //     .label('Role'),
-    nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short'), nga.field('firstName'), nga.field('lastName'), nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email')]);
+    nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short')]);
 
     // CREATION VIEW
-    users.creationView().fields([nga.field('firstName'), nga.field('lastName'), nga.field('displayName'),
+    users.creationView().fields([nga.field('displayName').label('Username'),
     // nga.field('email','stamplay_email_field')
     //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
     //     .cssClasses('hidden-email'),
@@ -620,7 +706,7 @@ module.exports = function (nga, users, roles) {
     return users;
 };
 
-},{}],7:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -920,7 +1006,7 @@ var Field = (function () {
 exports["default"] = Field;
 module.exports = exports["default"];
 
-},{"../Utils/stringUtils":8}],8:[function(require,module,exports){
+},{"../Utils/stringUtils":11}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -946,7 +1032,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{}],9:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /**
  * humane.js
  * Humanized Messages for Notifications

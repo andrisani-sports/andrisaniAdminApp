@@ -4,7 +4,6 @@ module.exports = function(nga,users,roles) {
     users.listView()
     .fields([
         nga.field('displayName').label('Username'),
-        nga.field('id'),
         nga.field('givenRole', 'reference')
         	.label('User Role')
         	.cssClasses('capitalize')
@@ -32,23 +31,18 @@ module.exports = function(nga,users,roles) {
         nga.field('id'),
         // nga.field('givenrole','change_role_dropdown')
         //     .label('Role'),
-        nga.field('dt_create', 'date').label('Created').format('short'),
-        	nga.field('dt_update', 'date').label('Last Update').format('short'),
-        nga.field('firstName'),
-        nga.field('lastName'),
         nga.field('displayName').label('Username'),
         nga.field('publicEmail').label('Email'),
-        // nga.field('profile', 'template')
-        // 	.label('Profile Image')
-        // 	.template('<img src="{{ entry.values.profile }}" style="max-width: 50px; height: auto;" />'),
+        nga.field('dt_create', 'date').label('Created').format('short'),
+        nga.field('dt_update', 'date').label('Last Update').format('short'),
+        
     ]);
 
     // CREATION VIEW
     users.creationView()
     .fields([
-        nga.field('firstName'),
-        nga.field('lastName'),
-        nga.field('displayName'),
+        nga.field('displayName')
+            .label('Username'),
         // nga.field('email','stamplay_email_field')
         //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
         //     .cssClasses('hidden-email'),
