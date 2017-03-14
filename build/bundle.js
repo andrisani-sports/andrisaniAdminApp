@@ -454,9 +454,9 @@ require('./custom/errorHandlers/appLevel')(myApp);
 
 // User Name controller (used to pass user name to header)
 myApp.controller('username', ['$scope', '$window', function ($scope, $window) {
-  // used in header.html
+    // used in header.html
 
-  $scope.username = $window.localStorage.getItem('username');
+    $scope.username = $window.localStorage.getItem('username');
 }]);
 
 /***************************************
@@ -507,10 +507,10 @@ myApp.controller('username', ['$scope', '$window', function ($scope, $window) {
 
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function (nga) {
-  // nga.registerFieldType('matrix_editor', MatrixEditorFieldConfig);
+    // nga.registerFieldType('matrix_editor', MatrixEditorFieldConfig);
 }]);
 myApp.config(['FieldViewConfigurationProvider', function (fvp) {
-  // fvp.registerFieldView('matrix_editor', MatrixEditorFieldView);
+    // fvp.registerFieldView('matrix_editor', MatrixEditorFieldView);
 }]);
 
 /***************************************
@@ -519,58 +519,58 @@ myApp.config(['FieldViewConfigurationProvider', function (fvp) {
 
 myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (nga, Restangular) {
 
-  // ==================================================
-  // create the default admin application
-  // ==================================================
+    // ==================================================
+    // create the default admin application
+    // ==================================================
 
-  var admin = nga.application('Andrisani Sports').baseApiUrl('https://pitchingdata.stamplayapp.com/api/cobject/v1/');
+    var admin = nga.application('Andrisani Sports').baseApiUrl('https://pitchingdata.stamplayapp.com/api/cobject/v1/');
 
-  // ==================================================
-  // add entities
-  // ==================================================
+    // ==================================================
+    // add entities
+    // ==================================================
 
-  // roles (https://pitchingdata.stamplayapp.com/api/user/v1/roles)
-  var createRole = require('./models/role');
-  var roles = nga.entity('roles').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
+    // roles (https://pitchingdata.stamplayapp.com/api/user/v1/roles)
+    var createRole = require('./models/role');
+    var roles = nga.entity('roles').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
 
-  // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
-  var createUser = require('./models/users');
-  var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
+    // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
+    var createUser = require('./models/users');
+    var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
 
-  // ADD TO ADMIN OBJECT
-  admin.addEntity(createRole(nga, roles));
-  admin.addEntity(createUser(nga, userEntity, roles));
+    // ADD TO ADMIN OBJECT
+    admin.addEntity(createRole(nga, roles));
+    admin.addEntity(createUser(nga, userEntity, roles));
 
-  /***************************************
-   * CUSTOM MENU
-   ***************************************/
+    /***************************************
+     * CUSTOM MENU
+     ***************************************/
 
-  admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')));
+    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')));
 
-  /***************************************
-   * CUSTOM HEADER
-   ***************************************/
+    /***************************************
+     * CUSTOM HEADER
+     ***************************************/
+    var customHeaderTemplate = '<div class="navbar-header">' + '<button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '</button>' + '<a class="navbar-brand" href="#" ng-click="appController.displayHome()"><img src="images/bki-logo35x40.png" align="left" style="margin:-8px 5px 0 0;" />Byron Katie Admin</a>' + '</div>' + '<ul class="nav navbar-top-links navbar-right hidden-xs">' + '<li class="dropdown">' + '<a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">' + '<i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>' + '</a>' + '<ul class="dropdown-menu dropdown-user" role="menu">' + '<li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>' + '</ul>' + '</li>' + '</ul>';
 
-  // var customHeaderTemplate = '';
-  // admin.header(customHeaderTemplate);
+    admin.header(customHeaderTemplate);
 
-  /***************************************
-   * CUSTOM DASHBOARD
-   * http://ng-admin-book.marmelab.com/doc/Dashboard.html
-   ***************************************/
+    /***************************************
+     * CUSTOM DASHBOARD
+     * http://ng-admin-book.marmelab.com/doc/Dashboard.html
+     ***************************************/
 
-  /***************************************
-   * CUSTOM ERROR MESSAGES
-   ***************************************/
+    /***************************************
+     * CUSTOM ERROR MESSAGES
+     ***************************************/
 
-  var adminErrorHandlers = require('./custom/errorHandlers/admin');
-  adminErrorHandlers(admin);
+    var adminErrorHandlers = require('./custom/errorHandlers/admin');
+    adminErrorHandlers(admin);
 
-  /***************************************
-   * ATTACH ADMIN APP TO DOM & RUN
-   ***************************************/
+    /***************************************
+     * ATTACH ADMIN APP TO DOM & RUN
+     ***************************************/
 
-  nga.configure(admin);
+    nga.configure(admin);
 }]);
 
 },{"./custom/errorHandlers/admin":1,"./custom/errorHandlers/appLevel":2,"./custom/interceptors/stamplay":3,"./models/role":5,"./models/users":6,"admin-config/lib/Field/Field":7}],5:[function(require,module,exports){
@@ -593,23 +593,20 @@ module.exports = function (nga, role) {
 module.exports = function (nga, users, roles) {
 
     // LIST VIEW
-    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }]), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
+    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
 
     // SHOW VIEW
     users.showView().title('"{{ entry.values.displayName }}" Profile').fields([nga.field('id'),
     // nga.field('givenrole','change_role_dropdown')
     //     .label('Role'),
-    nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short'), nga.field('firstName'), nga.field('lastName'), nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email'), nga.field('profile', 'template').label('Profile Image').template('<img src="{{ entry.values.profile }}" style="max-width: 50px; height: auto;" />'), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }])]);
+    nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short'), nga.field('firstName'), nga.field('lastName'), nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email')]);
 
     // CREATION VIEW
     users.creationView().fields([nga.field('firstName'), nga.field('lastName'), nga.field('displayName'),
     // nga.field('email','stamplay_email_field')
     //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
     //     .cssClasses('hidden-email'),
-    nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password'),
-    // nga.field('givenrole','change_role_dropdown')
-    //     .label('Role'),
-    nga.field('paid', 'boolean').choices([{ value: true, label: 'Yes' }, { value: false, label: 'No' }])]).prepare(function (entry) {
+    nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password')]).prepare(function (entry) {
         // entry.values.email = entry.values.publicEmail;
         entry.values.email = 'test@test.com';
     });

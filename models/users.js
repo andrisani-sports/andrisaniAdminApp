@@ -10,11 +10,6 @@ module.exports = function(nga,users,roles) {
         	.cssClasses('capitalize')
         	.targetEntity(roles)
         	.targetField(nga.field('name')),
-        nga.field('paid', 'boolean')
-	        .choices([
-	        	{ value: true, label: 'yes'},
-	        	{ value: false, label: 'no'}
-	        ]),
         nga.field('dt_create', 'date').label('Created').format('short')
     ])
     .sortField('displayName')
@@ -43,13 +38,9 @@ module.exports = function(nga,users,roles) {
         nga.field('lastName'),
         nga.field('displayName').label('Username'),
         nga.field('publicEmail').label('Email'),
-        nga.field('profile', 'template')
-        	.label('Profile Image')
-        	.template('<img src="{{ entry.values.profile }}" style="max-width: 50px; height: auto;" />'),
-        nga.field('paid', 'boolean').choices([
-        	{ value: true, label: 'yes'},
-        	{ value: false, label: 'no'}
-        ])
+        // nga.field('profile', 'template')
+        // 	.label('Profile Image')
+        // 	.template('<img src="{{ entry.values.profile }}" style="max-width: 50px; height: auto;" />'),
     ]);
 
     // CREATION VIEW
@@ -67,11 +58,6 @@ module.exports = function(nga,users,roles) {
         nga.field('password'),
         // nga.field('givenrole','change_role_dropdown')
         //     .label('Role'),
-        nga.field('paid', 'boolean')
-        	.choices([
-        		{ value: true, label: 'Yes'},
-        		{ value: false, label: 'No'}
-        	])
     ])
     .prepare((entry) => {
         // entry.values.email = entry.values.publicEmail;

@@ -142,9 +142,28 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
 /***************************************
  * CUSTOM HEADER
  ***************************************/
- 
-    // var customHeaderTemplate = '';
-    // admin.header(customHeaderTemplate);
+    var customHeaderTemplate =
+    '<div class="navbar-header">' +
+        '<button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">' +
+          '<span class="icon-bar"></span>' +
+          '<span class="icon-bar"></span>' +
+          '<span class="icon-bar"></span>' +
+        '</button>' +
+        '<a class="navbar-brand" href="#" ng-click="appController.displayHome()"><img src="images/bki-logo35x40.png" align="left" style="margin:-8px 5px 0 0;" />Byron Katie Admin</a>' +
+    '</div>' +
+
+    '<ul class="nav navbar-top-links navbar-right hidden-xs">' +
+        '<li class="dropdown">' +
+            '<a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">' +
+                '<i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>' +
+            '</a>' +
+            '<ul class="dropdown-menu dropdown-user" role="menu">' +
+                '<li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>' +
+            '</ul>' +
+        '</li>' +
+    '</ul>';
+
+    admin.header(customHeaderTemplate);
 
 /***************************************
  * CUSTOM DASHBOARD
