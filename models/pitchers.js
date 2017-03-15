@@ -57,6 +57,8 @@ module.exports = function(nga,pitchers,teams,user) {
 					.label('Team')
           .targetEntity(teams)
           .targetField(nga.field('name'))
+          .sortField('name')
+          .sortDir('ASC')
 			])
 
 

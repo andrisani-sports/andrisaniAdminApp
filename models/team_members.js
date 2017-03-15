@@ -50,13 +50,15 @@ module.exports = function(nga,team_members,teams,user) {
 					.label('Team')
           .targetEntity(teams)
           .targetField(nga.field('name'))
+          .sortField('name')
+          .sortDir('ASC')
 			])
 
 
     // EDITION VIEW
     team_members.editionView()
     .title('Edit "{{ entry.values.name }}"')
-    .fields(teams.creationView().fields());
+    .fields(team_members.creationView().fields());
     
     // DELETION VIEW
     team_members.deletionView()
