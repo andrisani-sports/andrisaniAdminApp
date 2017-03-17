@@ -38,8 +38,8 @@ module.exports = function(nga,pitchers,teams,user) {
 				nga.field('team', 'reference')
 					.label('Team')
           .targetEntity(teams)
-          .targetField(nga.field('name'))
-				// nga.field('baselines')
+          .targetField(nga.field('name')),
+				nga.field('baselines', 'json')
 		])
 
 
@@ -60,6 +60,24 @@ module.exports = function(nga,pitchers,teams,user) {
           .sortField('name')
           .sortDir('ASC')
 			])
+			.onSubmitSuccess(['entry','entity','$http','$state', function(entry,entity,$http,$state){
+				function s4() {
+ 					return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+ 				}
+				function guid() {
+  				return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+				}
+				var uuid = guid();
+				var pitcherID = entry._identifierValue;
+ 				console.log('unique_id', uuid);
+ 				console.log('pitcherID', pitcherID);
+ 				$http.put('https://pitchingdata.stamplayapp.com/api/cobject/v1/pitchers/' + pitcherID, { unique_id:uuid })
+ 					.then(function(response){
+ 						$state.go($state.get('show'), { entity: entity.name(), id: response.data._id });
+ 					});
+
+ 				return false;
+			}])
 
 
     // EDITION VIEW
