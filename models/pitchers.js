@@ -4,7 +4,7 @@ module.exports = function(nga,pitchers,teams,user) {
   pitchers.listView()
 	  .title('All Pitchers')
 	  .fields([
-	      nga.field('name'),
+	      nga.field('unique_id'),
 	      nga.field('team', 'reference')
 					.label('Team')
           .targetEntity(teams)
@@ -12,9 +12,7 @@ module.exports = function(nga,pitchers,teams,user) {
 	      nga.field('dt_create', 'date').label('Created').format('short'),
 	      nga.field('dt_update', 'date').label('Updated').format('short'),
 	  ])
-	  .sortField('name')
-	  .sortDir('ASC')
-	  .listActions(['show','edit','delete'])
+	  .listActions(['show','delete'])
 	  .filters([
 	      nga.field('name')
 	          .pinned(true)
@@ -23,13 +21,13 @@ module.exports = function(nga,pitchers,teams,user) {
 
   // SHOW VIEW
   pitchers.showView()
-	  .title('"{{ entry.values.name }}"')
+	  .title('"{{ entry.values.unique_id }}"')
 	  .fields([
-	      nga.field('id'),
+	      // nga.field('id'),
 	      nga.field('unique_id').label('Unique ID'),
 				nga.field('dt_create', 'date').label('Created').format('short'),
 				nga.field('dt_update', 'date').label('Updated').format('short'),
-				nga.field('name'),
+				// nga.field('name'),
 				nga.field('age'),
 				nga.field('height').label('Height (inches)'),
 				nga.field('weight').label('Weight (lbs)'),
@@ -81,13 +79,20 @@ module.exports = function(nga,pitchers,teams,user) {
 
 
     // EDITION VIEW
-    pitchers.editionView()
-    .title('Edit "{{ entry.values.name }}"')
-    .fields(pitchers.creationView().fields());
+   //  pitchers.editionView()
+   //  .title('Edit "{{ entry.values.unique_id }}"')
+   //  .fields([
+   //  		nga.field('name'),
+   //  		nga.field('age'),
+			// 	nga.field('height').label('Height (inches)'),
+			// 	nga.field('weight').label('Weight (lbs)'),
+			// 	nga.field('stride_length').label('Stride Length (inches)'),
+			// 	nga.field('device_height').label('Device Height (inches)')
+			// ])
     
     // DELETION VIEW
     pitchers.deletionView()
-     .title('Delete "{{ entry.values.name }}"')
+     .title('Delete "{{ entry.values.unique_id }}"')
 
     return pitchers;
 };

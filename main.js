@@ -85,15 +85,28 @@ myApp.controller('username', ['$scope', '$window', function($scope, $window) { /
  * use of 'import': http://stackoverflow.com/questions/36451969/custom-type-the-field-class-is-injected-as-an-object-not-a-function
  ***************************************/
 
+// change role field
+import changeRoleFieldConfig from './custom/customFields/changeUserRole/config';
+import changeRoleFieldView from './custom/customFields/changeUserRole/view';
+import changeRoleFieldDirective from './custom/customFields/changeUserRole/directive';
+
+// stamplay email field
+import StamplayEmailFieldConfig from './custom/customFields/stamplay_email_field/config';
+import StamplayEmailFieldView from './custom/customFields/stamplay_email_field/view';
+import stamplayEmailFieldDirective from './custom/customFields/stamplay_email_field/directive';
 
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function(nga) {
-    // nga.registerFieldType('matrix_editor', MatrixEditorFieldConfig);
+    nga.registerFieldType('change_role_dropdown',changeRoleFieldConfig);
+    nga.registerFieldType('stamplay_email_field',StamplayEmailFieldConfig);
 }]);
 myApp.config(['FieldViewConfigurationProvider', function(fvp) {
-    // fvp.registerFieldView('matrix_editor', MatrixEditorFieldView);
+    fvp.registerFieldView('change_role_dropdown',changeRoleFieldView);
+    fvp.registerFieldView('stamplay_email_field',StamplayEmailFieldView);
 }]);
 
+myApp.directive('changeUserRole',changeRoleFieldDirective);
+myApp.directive('stamplayEmailField',stamplayEmailFieldDirective);
   
 
 /***************************************
@@ -148,7 +161,7 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
 
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga,roles));
-    admin.addEntity(createUser(nga,userEntity,roles));
+    admin.addEntity(createUser(nga,userEntity,roles,teams));
     admin.addEntity(createTeams(nga,teams,userEntity));
     admin.addEntity(createTeamMembers(nga,team_members,teams,userEntity));
     admin.addEntity(createPitchers(nga,pitchers,teams,userEntity));
@@ -201,7 +214,70 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
  * CUSTOM DASHBOARD
  * http://ng-admin-book.marmelab.com/doc/Dashboard.html
  ***************************************/
-
+admin.dashboard(nga.dashboard()
+    .addCollection(nga.collection(userEntity)
+        .perPage(10)
+        .fields([
+            nga.field('displayName').label('Username'),
+            nga.field('givenRole', 'reference')
+                .label('User Role')
+                .cssClasses('capitalize')
+                .targetEntity(roles)
+                .targetField(nga.field('name')),
+            nga.field('team', 'reference')
+                .label('Team')
+                .targetEntity(teams)
+                .targetField(nga.field('name'))
+        ])
+        
+    )
+    .addCollection(nga.collection(teams)
+        .title('Teams')
+        .fields([
+            nga.field('name')
+        ])
+    )
+    .addCollection(nga.collection(team_members)
+        .title('Team Members')
+        .fields([
+            nga.field('name'),
+            nga.field('team', 'reference')
+                .label('Team')
+                .targetEntity(teams)
+                .targetField(nga.field('name'))
+        ])
+    )
+    .addCollection(nga.collection(pitchers)
+        .title('Pitchers')
+        .fields([
+            nga.field('unique_id'),
+            nga.field('team', 'reference')
+                .label('Team')
+                .targetEntity(teams)
+                .targetField(nga.field('name'))
+        ])
+    )
+    .addCollection(nga.collection(pitcher_workload)
+        .title('Pitcher Workload')
+        .fields([
+            nga.field('pitcher', 'reference')
+                .label('Pitcher')
+                .targetEntity(pitchers)
+                .targetField(nga.field('unique_id')),
+            nga.field('dt_create', 'date').label('Created').format('short'),
+        ])
+    )
+    .addCollection(nga.collection(pitching_data)
+        .title('Pitching Data')
+        .fields([
+            nga.field('pitcher', 'reference')
+                .label('Pitcher')
+                .targetEntity(pitchers)
+                .targetField(nga.field('unique_id')),
+            nga.field('dt_create', 'date').label('Created').format('short'),
+        ])
+    )
+);    
 
 /***************************************
  * CUSTOM ERROR MESSAGES

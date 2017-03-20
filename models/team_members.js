@@ -58,7 +58,15 @@ module.exports = function(nga,team_members,teams,user) {
     // EDITION VIEW
     team_members.editionView()
     .title('Edit "{{ entry.values.name }}"')
-    .fields(team_members.creationView().fields());
+    .fields([
+    		nga.field('name'),
+				nga.field('email', 'email'),
+				nga.field('phone'),
+				nga.field('team', 'reference')
+          .label('Team')
+          .targetEntity(teams)
+          .targetField(nga.field('name'))
+			])
     
     // DELETION VIEW
     team_members.deletionView()

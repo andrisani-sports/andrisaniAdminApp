@@ -7,15 +7,13 @@ module.exports = function(nga,pitching_data,pitchers,pitcher_workload,user) {
 	      nga.field('pitcher', 'reference')
 					.label('Pitcher')
           .targetEntity(pitchers)
-          .targetField(nga.field('name')),
+          .targetField(nga.field('unique_id')),
 	      nga.field('dt_create', 'date').label('Created').format('short'),
 	      nga.field('dt_update', 'date').label('Updated').format('short'),
 	  ])
-	  .sortField('name')
-	  .sortDir('ASC')
-	  .listActions(['show','edit','delete'])
+	  .listActions(['show','delete'])
 	  .filters([
-	      nga.field('name')
+	      nga.field('unique_id')
 	          .pinned(true)
 	          .template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')
 	  ])
@@ -30,32 +28,10 @@ module.exports = function(nga,pitching_data,pitchers,pitcher_workload,user) {
 				nga.field('pitcher', 'reference')
 					.label('Pitcher')
           .targetEntity(pitchers)
-          .targetField(nga.field('name')),
+          .targetField(nga.field('unique_id')),
         nga.field('pulls'),
         nga.field('note', 'wysiwyg')
 		])
-
-
-    // CREATION VIEW
-    pitching_data.creationView()
-    	.title('Add Pitching Data')
-    	.fields([
-    		nga.field('pitcher', 'reference')
-					.label('Pitcher')
-          .targetEntity(pitchers)
-          .targetField(nga.field('name'))
-          .sortField('name')
-          .sortDir('ASC'),
-        nga.field('pulls', 'json'),
-        nga.field('note', 'wysiwyg')
-    		
-			])
-
-
-    // EDITION VIEW
-    pitching_data.editionView()
-    .title('Edit Pitching Data')
-    .fields(pitching_data.creationView().fields());
     
     // DELETION VIEW
     pitching_data.deletionView()

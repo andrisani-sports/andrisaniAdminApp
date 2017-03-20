@@ -7,16 +7,14 @@ module.exports = function(nga,pitcher_workload,pitchers,user) {
 	      nga.field('pitcher', 'reference')
 					.label('Pitcher')
           .targetEntity(pitchers)
-          .targetField(nga.field('name')),
+          .targetField(nga.field('unique_id')),
 	      nga.field('game_date', 'date').label('Game Date').format('shortDate'),
 	      nga.field('dt_create', 'date').label('Created').format('short'),
 	      nga.field('dt_update', 'date').label('Updated').format('short'),
 	  ])
-	  .sortField('name')
-	  .sortDir('ASC')
 	  .listActions(['show','edit','delete'])
 	  .filters([
-	      nga.field('name')
+	      nga.field('unique_id')
 	          .pinned(true)
 	          .template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')
 	  ])
@@ -31,7 +29,7 @@ module.exports = function(nga,pitcher_workload,pitchers,user) {
 				nga.field('pitcher', 'reference')
 					.label('Pitcher')
           .targetEntity(pitchers)
-          .targetField(nga.field('name')),
+          .targetField(nga.field('unique_id')),
 	      nga.field('game_date', 'date').label('Game Date').format('shortDate'),
 	      nga.field('number_innings').label('Inning Count'),
 	      nga.field('number_pitches').label('Ptich Count'),
@@ -46,9 +44,7 @@ module.exports = function(nga,pitcher_workload,pitchers,user) {
     		nga.field('pitcher', 'reference')
 					.label('Pitcher')
           .targetEntity(pitchers)
-          .targetField(nga.field('name'))
-          .sortField('name')
-          .sortDir('ASC'),
+          .targetField(nga.field('unique_id')),
 	      nga.field('game_date', 'date').label('Game Date'),
 	      nga.field('number_innings').label('Inning Count'),
 	      nga.field('number_pitches').label('Ptich Count'),
