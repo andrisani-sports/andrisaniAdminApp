@@ -34,7 +34,7 @@ var ChangeRoleField = function (_FileField) {
 
 exports.default = ChangeRoleField;
 
-},{"admin-config/lib/Field/FileField":19}],2:[function(require,module,exports){
+},{"admin-config/lib/Field/FileField":20}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -193,7 +193,7 @@ var StamplayEmailFieldConfig = function (_TextField) {
 
 exports.default = StamplayEmailFieldConfig;
 
-},{"admin-config/lib/Field/TextField":20}],5:[function(require,module,exports){
+},{"admin-config/lib/Field/TextField":21}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -313,7 +313,7 @@ module.exports = function (admin) {
     return admin;
 };
 
-},{"humane-js":22}],8:[function(require,module,exports){
+},{"humane-js":23}],8:[function(require,module,exports){
 'use strict';
 
 module.exports = function (myApp) {
@@ -840,6 +840,10 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     var createPitchingData = require('./models/pitching_data');
     var pitching_data = nga.entity('pitching_data');
 
+    // app issues
+    var createIssue = require('./models/issues');
+    var issues = nga.entity('issues');
+
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga, roles));
     admin.addEntity(createUser(nga, userEntity, roles, teams));
@@ -848,12 +852,13 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     admin.addEntity(createPitchers(nga, pitchers, teams, userEntity));
     admin.addEntity(createPitcherWorkload(nga, pitcher_workload, pitchers, userEntity));
     admin.addEntity(createPitchingData(nga, pitching_data, pitchers, pitcher_workload, userEntity));
+    admin.addEntity(createIssue(nga, issues, userEntity));
 
     /***************************************
      * CUSTOM MENU
      ***************************************/
 
-    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Team Info</a>')).addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Pitcher Info</a>')).addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;')));
+    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Team Info</a>')).addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Pitcher Info</a>')).addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>')).addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;')));
 
     /***************************************
      * CUSTOM HEADER
@@ -882,7 +887,24 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     nga.configure(admin);
 }]);
 
-},{"./custom/customFields/changeUserRole/config":1,"./custom/customFields/changeUserRole/directive":2,"./custom/customFields/changeUserRole/view":3,"./custom/customFields/stamplay_email_field/config":4,"./custom/customFields/stamplay_email_field/directive":5,"./custom/customFields/stamplay_email_field/view":6,"./custom/errorHandlers/admin":7,"./custom/errorHandlers/appLevel":8,"./custom/interceptors/stamplay":9,"./models/pitcher_workload":11,"./models/pitchers":12,"./models/pitching_data":13,"./models/role":14,"./models/team_members":15,"./models/teams":16,"./models/users":17,"admin-config/lib/Field/Field":18}],11:[function(require,module,exports){
+},{"./custom/customFields/changeUserRole/config":1,"./custom/customFields/changeUserRole/directive":2,"./custom/customFields/changeUserRole/view":3,"./custom/customFields/stamplay_email_field/config":4,"./custom/customFields/stamplay_email_field/directive":5,"./custom/customFields/stamplay_email_field/view":6,"./custom/errorHandlers/admin":7,"./custom/errorHandlers/appLevel":8,"./custom/interceptors/stamplay":9,"./models/issues":11,"./models/pitcher_workload":12,"./models/pitchers":13,"./models/pitching_data":14,"./models/role":15,"./models/team_members":16,"./models/teams":17,"./models/users":18,"admin-config/lib/Field/Field":19}],11:[function(require,module,exports){
+'use strict';
+
+module.exports = function (nga, issues, user) {
+
+	// LIST VIEW
+	issues.listView().title('All App Issues').fields([nga.field('message').label('Issue'), nga.field('dt_create', 'date').label('Created').format('short')]).listActions(['show', 'delete']).filters([nga.field('email').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	issues.showView().title('App Issue').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name').label('User'), nga.field('email').label('User Email'), nga.field('message').label('Issue')]);
+
+	// DELETION VIEW
+	issues.deletionView().title('Delete Issue');
+
+	return issues;
+};
+
+},{}],12:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitcher_workload, pitchers, user) {
@@ -905,7 +927,7 @@ module.exports = function (nga, pitcher_workload, pitchers, user) {
 	return pitcher_workload;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitchers, teams, user) {
@@ -921,23 +943,41 @@ module.exports = function (nga, pitchers, teams, user) {
 	nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('baselines', 'json')]);
 
 	// CREATION VIEW
-	pitchers.creationView().title('Add Pitcher').fields([nga.field('name'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')).sortField('name').sortDir('ASC')]).onSubmitSuccess(['entry', 'entity', '$http', '$state', function (entry, entity, $http, $state) {
-		function s4() {
-			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-		}
-		function guid() {
-			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-		}
-		var uuid = guid();
-		var pitcherID = entry._identifierValue;
-		console.log('unique_id', uuid);
-		console.log('pitcherID', pitcherID);
-		$http.put('https://pitchingdata.stamplayapp.com/api/cobject/v1/pitchers/' + pitcherID, { unique_id: uuid }).then(function (response) {
-			$state.go($state.get('show'), { entity: entity.name(), id: response.data._id });
-		});
+	//  pitchers.creationView()
+	//  	.title('Add Pitcher')
+	//  	.fields([
+	//  		nga.field('name'),
+	//  		nga.field('age'),
+	// 	nga.field('height').label('Height (inches)'),
+	// 	nga.field('weight').label('Weight (lbs)'),
+	// 	nga.field('stride_length').label('Stride Length (inches)'),
+	// 	nga.field('device_height').label('Device Height (inches)'),
+	// 	nga.field('team', 'reference')
+	// 		.label('Team')
+	//        .targetEntity(teams)
+	//        .targetField(nga.field('name'))
+	//        .sortField('name')
+	//        .sortDir('ASC')
+	// ])
+	// .onSubmitSuccess(['entry','entity','$http','$state', function(entry,entity,$http,$state){
+	// 	function s4() {
+	// 			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+	// 		}
+	// 	function guid() {
+	// 			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+	// 	}
+	// 	var uuid = guid();
+	// 	var pitcherID = entry._identifierValue;
+	// 		console.log('unique_id', uuid);
+	// 		console.log('pitcherID', pitcherID);
+	// 		$http.put('https://pitchingdata.stamplayapp.com/api/cobject/v1/pitchers/' + pitcherID, { unique_id:uuid })
+	// 			.then(function(response){
+	// 				$state.go($state.get('show'), { entity: entity.name(), id: response.data._id });
+	// 			});
 
-		return false;
-	}]);
+	// 		return false;
+	// }])
+
 
 	// EDITION VIEW
 	//  pitchers.editionView()
@@ -957,7 +997,7 @@ module.exports = function (nga, pitchers, teams, user) {
 	return pitchers;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitching_data, pitchers, pitcher_workload, user) {
@@ -974,7 +1014,7 @@ module.exports = function (nga, pitching_data, pitchers, pitcher_workload, user)
 	return pitching_data;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, role) {
@@ -988,7 +1028,7 @@ module.exports = function (nga, role) {
     return role;
 };
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, team_members, teams, user) {
@@ -1011,7 +1051,7 @@ module.exports = function (nga, team_members, teams, user) {
 	return team_members;
 };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, teams, user) {
@@ -1034,7 +1074,7 @@ module.exports = function (nga, teams, user) {
 	return teams;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, users, roles, teams) {
@@ -1060,7 +1100,7 @@ module.exports = function (nga, users, roles, teams) {
     return users;
 };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1360,7 +1400,7 @@ var Field = (function () {
 exports["default"] = Field;
 module.exports = exports["default"];
 
-},{"../Utils/stringUtils":21}],19:[function(require,module,exports){
+},{"../Utils/stringUtils":22}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1410,7 +1450,7 @@ var FileField = (function (_Field) {
 exports["default"] = FileField;
 module.exports = exports["default"];
 
-},{"./Field":18}],20:[function(require,module,exports){
+},{"./Field":19}],21:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1445,7 +1485,7 @@ var TextField = (function (_Field) {
 exports["default"] = TextField;
 module.exports = exports["default"];
 
-},{"./Field":18}],21:[function(require,module,exports){
+},{"./Field":19}],22:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1471,7 +1511,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * humane.js
  * Humanized Messages for Notifications

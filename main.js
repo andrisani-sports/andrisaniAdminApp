@@ -156,6 +156,10 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     // pitching data
     var createPitchingData = require('./models/pitching_data');
     var pitching_data = nga.entity('pitching_data');
+
+    // app issues
+    var createIssue = require('./models/issues');
+    var issues = nga.entity('issues');
     
     
 
@@ -167,6 +171,7 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     admin.addEntity(createPitchers(nga,pitchers,teams,userEntity));
     admin.addEntity(createPitcherWorkload(nga,pitcher_workload,pitchers,userEntity));
     admin.addEntity(createPitchingData(nga,pitching_data,pitchers,pitcher_workload,userEntity));
+    admin.addEntity(createIssue(nga,issues,userEntity));
     
 /***************************************
  * CUSTOM MENU
@@ -182,6 +187,8 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
             .addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
             .addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))
             .addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;'))
+        .addChild(nga.menu().template(`<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>`))
+            .addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;'))
     );
 
 /***************************************
