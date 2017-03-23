@@ -18,7 +18,7 @@ function changeRoleField(Restangular,$log){
         	var roleId = choice._id;
 
         	// change role in user record on Stamplay
-			var url = 'https://bkschool.stamplayapp.com/api/user/v1/users/' + userId + '/role';
+			var url = 'https://pitchingdata.stamplayapp.com/api/user/v1/users/' + userId + '/role';
         	var data = {
         		'givenRole': roleId
         	};
@@ -44,7 +44,7 @@ function changeRoleField(Restangular,$log){
         	scope.roles = [];
         	scope.view = attrs.view;
         	if(scope.view == 'show'){
-        		Restangular.oneUrl('roles','https://bkschool.stamplayapp.com/api/user/v1/roles/')
+        		Restangular.oneUrl('roles','https://pitchingdata.stamplayapp.com/api/user/v1/roles/')
         		.get({_id: scope.currRoleId})
         		.then(
 	        		function(result){
@@ -59,7 +59,7 @@ function changeRoleField(Restangular,$log){
         	}
         	if(scope.view == 'edit'){
 		        // GET LIST OF ROLES FOR DROPDOWN
-		        var roleList = Restangular.allUrl('roles','https://bkschool.stamplayapp.com/api/user/v1/roles');
+		        var roleList = Restangular.allUrl('roles','https://pitchingdata.stamplayapp.com/api/user/v1/roles');
 		        roleList.getList()
 		        .then(
 			        function(result){

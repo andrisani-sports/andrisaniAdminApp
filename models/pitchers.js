@@ -4,7 +4,8 @@ module.exports = function(nga,pitchers,teams,user) {
   pitchers.listView()
 	  .title('All Pitchers')
 	  .fields([
-	      nga.field('unique_id'),
+	      nga.field('unique_id')
+	      	.label('Pitcher'),
 	      nga.field('team', 'reference')
 					.label('Team')
           .targetEntity(teams)

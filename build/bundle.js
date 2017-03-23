@@ -63,7 +63,7 @@ function changeRoleField(Restangular, $log) {
 			var roleId = choice._id;
 
 			// change role in user record on Stamplay
-			var url = 'https://bkschool.stamplayapp.com/api/user/v1/users/' + userId + '/role';
+			var url = 'https://pitchingdata.stamplayapp.com/api/user/v1/users/' + userId + '/role';
 			var data = {
 				'givenRole': roleId
 			};
@@ -83,7 +83,7 @@ function changeRoleField(Restangular, $log) {
 			scope.roles = [];
 			scope.view = attrs.view;
 			if (scope.view == 'show') {
-				Restangular.oneUrl('roles', 'https://bkschool.stamplayapp.com/api/user/v1/roles/').get({ _id: scope.currRoleId }).then(function (result) {
+				Restangular.oneUrl('roles', 'https://pitchingdata.stamplayapp.com/api/user/v1/roles/').get({ _id: scope.currRoleId }).then(function (result) {
 					result = result.data.plain();
 					scope.currRoleName = result[0].name;
 				}, function (error) {
@@ -92,7 +92,7 @@ function changeRoleField(Restangular, $log) {
 			}
 			if (scope.view == 'edit') {
 				// GET LIST OF ROLES FOR DROPDOWN
-				var roleList = Restangular.allUrl('roles', 'https://bkschool.stamplayapp.com/api/user/v1/roles');
+				var roleList = Restangular.allUrl('roles', 'https://pitchingdata.stamplayapp.com/api/user/v1/roles');
 				roleList.getList().then(function (result) {
 					if (scope.currPage._identifierValue) {
 						// IN 'EDITION' VIEW
@@ -911,7 +911,7 @@ module.exports = function (nga, pitcher_workload, pitchers, user) {
 module.exports = function (nga, pitchers, teams, user) {
 
 	// LIST VIEW
-	pitchers.listView().title('All Pitchers').fields([nga.field('unique_id'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	pitchers.listView().title('All Pitchers').fields([nga.field('unique_id').label('Pitcher'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
 
 	// SHOW VIEW
 	pitchers.showView().title('"{{ entry.values.unique_id }}"').fields([
@@ -1052,7 +1052,7 @@ module.exports = function (nga, users, roles, teams) {
     });
 
     // EDITION VIEW
-    users.editionView().title('Edit "{{ entry.values.displayName }}"').fields([nga.field('displayName').label('Username'), nga.field('email', 'stamplay_email_field').template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>', true).cssClasses('hidden-email'), nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password'), nga.field('givenrole', 'change_role_dropdown').label('Role'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
+    users.editionView().title('Edit "{{ entry.values.displayName }}"').fields([nga.field('displayName').label('Username'), nga.field('email', 'stamplay_email_field').template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>', true).cssClasses('hidden-email'), nga.field('publicEmail').label('Email'), nga.field('password'), nga.field('givenrole', 'change_role_dropdown').label('Role'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
 
     // DELETION VIEW
     users.deletionView().title('Delete "{{ entry.values.displayName }}"');

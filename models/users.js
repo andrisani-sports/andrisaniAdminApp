@@ -82,7 +82,6 @@ module.exports = function(nga,users,roles,teams) {
             .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
             .cssClasses('hidden-email'),
         nga.field('publicEmail')
-            .validation({ required: true })
             .label('Email'),
         nga.field('password'),
         nga.field('givenrole','change_role_dropdown')
