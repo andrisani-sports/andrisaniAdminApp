@@ -65,7 +65,7 @@ module.exports = function (admin) {
     return admin;
 };
 
-},{"humane-js":13}],2:[function(require,module,exports){
+},{"humane-js":14}],2:[function(require,module,exports){
 'use strict';
 
 module.exports = function (myApp) {
@@ -553,6 +553,10 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     var createPitcherWorkload = require('./models/pitcher_workload');
     var pitcher_workload = nga.entity('pitcher_workload');
 
+    // pitching data
+    var createPitchingData = require('./models/pitching_data');
+    var pitching_data = nga.entity('pitching_data');
+
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga, roles));
     admin.addEntity(createUser(nga, userEntity, roles));
@@ -560,12 +564,13 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     admin.addEntity(createTeamMembers(nga, team_members, teams, userEntity));
     admin.addEntity(createPitchers(nga, pitchers, teams, userEntity));
     admin.addEntity(createPitcherWorkload(nga, pitcher_workload, pitchers, userEntity));
+    admin.addEntity(createPitchingData(nga, pitching_data, pitchers, userEntity));
 
     /***************************************
      * CUSTOM MENU
      ***************************************/
 
-    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().title('Team Info').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;').addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))).addChild(nga.menu().title('Pitcher Info').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;').addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))));
+    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().title('Team Info').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;').addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))).addChild(nga.menu().title('Pitcher Info').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;').addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))).addChild(nga.menu(nga.entity('pitching_data')).title('Data').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;')));
 
     /***************************************
      * CUSTOM HEADER
@@ -593,7 +598,7 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     nga.configure(admin);
 }]);
 
-},{"./custom/errorHandlers/admin":1,"./custom/errorHandlers/appLevel":2,"./custom/interceptors/stamplay":3,"./models/pitcher_workload":5,"./models/pitchers":6,"./models/role":7,"./models/team_members":8,"./models/teams":9,"./models/users":10,"admin-config/lib/Field/Field":11}],5:[function(require,module,exports){
+},{"./custom/errorHandlers/admin":1,"./custom/errorHandlers/appLevel":2,"./custom/interceptors/stamplay":3,"./models/pitcher_workload":5,"./models/pitchers":6,"./models/pitching_data":7,"./models/role":8,"./models/team_members":9,"./models/teams":10,"./models/users":11,"admin-config/lib/Field/Field":12}],5:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitcher_workload, pitchers, user) {
@@ -644,6 +649,20 @@ module.exports = function (nga, pitchers, teams, user) {
 },{}],7:[function(require,module,exports){
 'use strict';
 
+module.exports = function (nga, pitchingData, pitchers, user) {
+
+	// LIST VIEW
+	pitchingData.listView().title('All data').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('mainValue')]).sortField('pitcher').sortDir('ASC').listActions(['show']).filters([nga.field('pitcher').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	pitchingData.showView().title('"{{ entry.values.mainValue }}"').fields([nga.field('id'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('mainValue'), nga.field('note'), nga.field('pulls', 'json')]);
+
+	return pitchingData;
+};
+
+},{}],8:[function(require,module,exports){
+'use strict';
+
 module.exports = function (nga, role) {
 
     // LIST VIEW
@@ -655,7 +674,7 @@ module.exports = function (nga, role) {
     return role;
 };
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, team_members, teams, user) {
@@ -678,7 +697,7 @@ module.exports = function (nga, team_members, teams, user) {
 	return team_members;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, teams, user) {
@@ -701,26 +720,29 @@ module.exports = function (nga, teams, user) {
 	return teams;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, users, roles) {
 
     // LIST VIEW
-    users.listView().fields([nga.field('displayName').label('Username'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
+    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }]), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);;
 
     // SHOW VIEW
     users.showView().title('"{{ entry.values.displayName }}" Profile').fields([nga.field('id'),
     // nga.field('givenrole','change_role_dropdown')
     //     .label('Role'),
-    nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short')]);
+    nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short'), nga.field('firstName'), nga.field('lastName'), nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email'), nga.field('profile', 'template').label('Profile Image').template('<img src="{{ entry.values.profile }}" style="max-width: 50px; height: auto;" />'), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }])]);
 
     // CREATION VIEW
-    users.creationView().fields([nga.field('displayName').label('Username'),
+    users.creationView().fields([nga.field('firstName'), nga.field('lastName'), nga.field('displayName'),
     // nga.field('email','stamplay_email_field')
     //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
     //     .cssClasses('hidden-email'),
-    nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password')]).prepare(function (entry) {
+    nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password'),
+    // nga.field('givenrole','change_role_dropdown')
+    //     .label('Role'),
+    nga.field('paid', 'boolean').choices([{ value: true, label: 'Yes' }, { value: false, label: 'No' }])]).prepare(function (entry) {
         // entry.values.email = entry.values.publicEmail;
         entry.values.email = 'test@test.com';
     });
@@ -734,7 +756,7 @@ module.exports = function (nga, users, roles) {
     return users;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1034,7 +1056,7 @@ var Field = (function () {
 exports["default"] = Field;
 module.exports = exports["default"];
 
-},{"../Utils/stringUtils":12}],12:[function(require,module,exports){
+},{"../Utils/stringUtils":13}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1060,7 +1082,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /**
  * humane.js
  * Humanized Messages for Notifications
