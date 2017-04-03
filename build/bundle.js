@@ -1,4 +1,252 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _FileField2 = require("admin-config/lib/Field/FileField");
+
+var _FileField3 = _interopRequireDefault(_FileField2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var ChangeRoleField = function (_FileField) {
+    _inherits(ChangeRoleField, _FileField);
+
+    function ChangeRoleField(name) {
+        _classCallCheck(this, ChangeRoleField);
+
+        var _this = _possibleConstructorReturn(this, (ChangeRoleField.__proto__ || Object.getPrototypeOf(ChangeRoleField)).call(this, name));
+
+        _this._type = "change_role_dropdown";
+        return _this;
+    }
+
+    return ChangeRoleField;
+}(_FileField3.default);
+
+exports.default = ChangeRoleField;
+
+},{"admin-config/lib/Field/FileField":20}],2:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+/*
+ * This directive is meant to be used inside the Page entity views. For it to work,
+ * it has to reference a 'page' Entity
+ */
+function changeRoleField(Restangular, $log) {
+
+	function controller($scope, $rootScope) {
+
+		var datastore = $scope.datastore;
+		var entryId = $scope.entity._uniqueId;
+		var currPage = $scope.currPage = datastore.getEntries(entryId)[0];
+		var userObj = $scope.userObj = currPage.values.plain();
+		var currRoleId = $scope.currRoleId = userObj.givenRole;
+		var userId = userObj.id;
+
+		$scope.updateRole = function (choice) {
+			var temp = $scope.currChoice;
+			var roleId = choice._id;
+
+			// change role in user record on Stamplay
+			var url = 'https://pitchingdata.stamplayapp.com/api/user/v1/users/' + userId + '/role';
+			var data = {
+				'givenRole': roleId
+			};
+			Restangular.oneUrl('users', url) // userId defined above, outside of function
+			.patch(data).then(function (result) {
+				var content = result.data.plain();
+			}, function (error) {
+				$log.error(error);
+			});
+		};
+	}
+
+	return {
+		restrict: 'E', // bind to attribute of element?
+		controller: controller,
+		link: function link(scope, element, attrs) {
+			scope.roles = [];
+			scope.view = attrs.view;
+			if (scope.view == 'show') {
+				Restangular.oneUrl('roles', 'https://pitchingdata.stamplayapp.com/api/user/v1/roles/').get({ _id: scope.currRoleId }).then(function (result) {
+					result = result.data.plain();
+					scope.currRoleName = result[0].name;
+				}, function (error) {
+					$log.error(error);
+				});
+			}
+			if (scope.view == 'edit') {
+				// GET LIST OF ROLES FOR DROPDOWN
+				var roleList = Restangular.allUrl('roles', 'https://pitchingdata.stamplayapp.com/api/user/v1/roles');
+				roleList.getList().then(function (result) {
+					if (scope.currPage._identifierValue) {
+						// IN 'EDITION' VIEW
+						result = result.data.plain();
+						scope.roles = result;
+						if ((typeof result === 'undefined' ? 'undefined' : _typeof(result)) !== 'object') result = JSON.parse(result);
+						scope.currRoleName = '';
+						result.map(function (e) {
+							if (e._id == scope.currRoleId) scope.currRoleName = e.name;
+						});
+						scope.currChoice = {
+							name: scope.currRoleName,
+							_id: scope.currRoleId
+						};
+					} // END if(viewType == 'edition')
+				}, function (error) {
+					$log.error(error);
+				});
+			}
+		},
+		template: '\n        <p ng-if="view==\'show\'" style="text-transform: capitalize;">{{currRoleName}}</p>\n        <div ng-if="view==\'edit\'">\n\t        <select ng-model="currChoice" \n\t            ng-options="role.name for role in roles track by role._id"\n\t            name="dropdown" \n\t            class="form-control" \n\t            ng-change="updateRole(this.currChoice)">\n\t        </select>\n\t    </div>'
+	};
+}
+
+changeRoleField.$inject = ['Restangular'];
+
+exports.default = changeRoleField;
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = {
+    getReadWidget: function getReadWidget() {
+        return '<change-user-role field="field" value="value" entity="entity" entry="entry" view="show"></change-user-role>';
+    },
+    getLinkWidget: function getLinkWidget() {
+        return 'error: cannot display file field as linkable';
+    },
+    getFilterWidget: function getFilterWidget() {
+        return 'error: cannot display file field as filter';
+    },
+    getWriteWidget: function getWriteWidget() {
+        return '<change-user-role field="field" value="value" entity="entity" entry="entry" view="edit"></change-user-role>';
+    }
+};
+
+},{}],4:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _TextField2 = require("admin-config/lib/Field/TextField");
+
+var _TextField3 = _interopRequireDefault(_TextField2);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // run "npm install admin-config --save-dev"
+// need to have a build tool transpile ES6 to regular javascript (browserify / babelify)
+
+var StamplayEmailFieldConfig = function (_TextField) {
+    _inherits(StamplayEmailFieldConfig, _TextField);
+
+    function StamplayEmailFieldConfig(name) {
+        _classCallCheck(this, StamplayEmailFieldConfig);
+
+        var _this = _possibleConstructorReturn(this, (StamplayEmailFieldConfig.__proto__ || Object.getPrototypeOf(StamplayEmailFieldConfig)).call(this, name));
+
+        _this._type = "stamplay_email_field";
+        return _this;
+    }
+    // this comes from an entity definition file, when the pagezone field type is invoked, this function 
+    // can be used in the definition file to pass parameters to this class
+
+
+    _createClass(StamplayEmailFieldConfig, [{
+        key: "sampleFunction",
+        value: function sampleFunction(sampleParam) {
+            if (!arguments.length) return this._sampleParam;
+            this._sampleParam = sampleParam;
+            return this;
+        }
+    }]);
+
+    return StamplayEmailFieldConfig;
+}(_TextField3.default);
+
+exports.default = StamplayEmailFieldConfig;
+
+},{"admin-config/lib/Field/TextField":21}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function stamplayEmailFieldDirective() {
+
+  function controller($scope, $rootScope) {
+    $scope.$watch('entry.values.publicEmail', function (newVal, oldVal) {
+      $scope.entry.values['email'] = newVal;
+    });
+  }
+
+  return {
+    restrict: 'E', // bind to attribute of element?
+    controller: controller,
+    link: function link(scope, element, attrs) {
+      var config = scope.field;
+    },
+    template: ''
+  };
+}
+
+stamplayEmailFieldDirective.$inject = [];
+
+exports.default = stamplayEmailFieldDirective;
+
+},{}],6:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+   value: true
+});
+exports.default = {
+   // displayed in listView and showView
+   getReadWidget: function getReadWidget() {
+      return '<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>';
+   },
+   // displayed in listView and showView when isDetailLink is true
+   getLinkWidget: function getLinkWidget() {
+      return 'Error: this field not applicable to List view or Show view';
+   },
+   // displayed in the filter form in the listView
+   getFilterWidget: function getFilterWidget() {
+      return 'Error: this field not applicable to List view';
+   },
+   // displayed in editionView and creationView
+   getWriteWidget: function getWriteWidget() {
+      return '<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>';
+   }
+};
+
+},{}],7:[function(require,module,exports){
 'use strict';
 
 module.exports = function (admin) {
@@ -65,7 +313,7 @@ module.exports = function (admin) {
     return admin;
 };
 
-},{"humane-js":14}],2:[function(require,module,exports){
+},{"humane-js":23}],8:[function(require,module,exports){
 'use strict';
 
 module.exports = function (myApp) {
@@ -126,7 +374,7 @@ module.exports = function (myApp) {
 		return myApp;
 };
 
-},{}],3:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -415,8 +663,32 @@ module.exports = function (myApp) {
 	});
 };
 
-},{}],4:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
+
+var _config = require('./custom/customFields/changeUserRole/config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _view = require('./custom/customFields/changeUserRole/view');
+
+var _view2 = _interopRequireDefault(_view);
+
+var _directive = require('./custom/customFields/changeUserRole/directive');
+
+var _directive2 = _interopRequireDefault(_directive);
+
+var _config3 = require('./custom/customFields/stamplay_email_field/config');
+
+var _config4 = _interopRequireDefault(_config3);
+
+var _view3 = require('./custom/customFields/stamplay_email_field/view');
+
+var _view4 = _interopRequireDefault(_view3);
+
+var _directive3 = require('./custom/customFields/stamplay_email_field/directive');
+
+var _directive4 = _interopRequireDefault(_directive3);
 
 var _Field = require('admin-config/lib/Field/Field');
 
@@ -505,13 +777,24 @@ myApp.controller('username', ['$scope', '$window', function ($scope, $window) {
  * use of 'import': http://stackoverflow.com/questions/36451969/custom-type-the-field-class-is-injected-as-an-object-not-a-function
  ***************************************/
 
+// change role field
+
+
+// stamplay email field
+
+
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function (nga) {
-    // nga.registerFieldType('matrix_editor', MatrixEditorFieldConfig);
+    nga.registerFieldType('change_role_dropdown', _config2.default);
+    nga.registerFieldType('stamplay_email_field', _config4.default);
 }]);
 myApp.config(['FieldViewConfigurationProvider', function (fvp) {
-    // fvp.registerFieldView('matrix_editor', MatrixEditorFieldView);
+    fvp.registerFieldView('change_role_dropdown', _view2.default);
+    fvp.registerFieldView('stamplay_email_field', _view4.default);
 }]);
+
+myApp.directive('changeUserRole', _directive2.default);
+myApp.directive('stamplayEmailField', _directive4.default);
 
 /***************************************
  * DEFINE DATA ENTITIES
@@ -557,20 +840,26 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     var createPitchingData = require('./models/pitching_data');
     var pitching_data = nga.entity('pitching_data');
 
+    // app issues
+    var createIssue = require('./models/issues');
+    var issues = nga.entity('issues');
+
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga, roles));
-    admin.addEntity(createUser(nga, userEntity, roles));
+    admin.addEntity(createUser(nga, userEntity, roles, teams));
     admin.addEntity(createTeams(nga, teams, userEntity));
     admin.addEntity(createTeamMembers(nga, team_members, teams, userEntity));
     admin.addEntity(createPitchers(nga, pitchers, teams, userEntity));
     admin.addEntity(createPitcherWorkload(nga, pitcher_workload, pitchers, userEntity));
-    admin.addEntity(createPitchingData(nga, pitching_data, pitchers, userEntity));
+    // admin.addEntity(createPitchingData(nga,pitching_data,pitchers,userEntity));
+    admin.addEntity(createPitchingData(nga, pitching_data, pitchers, pitcher_workload, userEntity));
+    admin.addEntity(createIssue(nga, issues, userEntity));
 
     /***************************************
      * CUSTOM MENU
      ***************************************/
 
-    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().title('Team Info').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;').addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))).addChild(nga.menu().title('Pitcher Info').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;').addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))).addChild(nga.menu(nga.entity('pitching_data')).title('Data').icon('<span class="glyphicon glyphicon-folder-open"></span>&nbsp;')));
+    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Team Info</a>')).addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Pitcher Info</a>')).addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>')).addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;')));
 
     /***************************************
      * CUSTOM HEADER
@@ -583,6 +872,7 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
      * CUSTOM DASHBOARD
      * http://ng-admin-book.marmelab.com/doc/Dashboard.html
      ***************************************/
+    admin.dashboard(nga.dashboard().addCollection(nga.collection(userEntity).perPage(10).fields([nga.field('displayName').label('Username'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))])).addCollection(nga.collection(teams).title('Teams').fields([nga.field('name')])).addCollection(nga.collection(team_members).title('Team Members').fields([nga.field('name'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))])).addCollection(nga.collection(pitchers).title('Pitchers').fields([nga.field('unique_id'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))])).addCollection(nga.collection(pitcher_workload).title('Pitcher Workload').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short')])).addCollection(nga.collection(pitching_data).title('Pitching Data').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short')])));
 
     /***************************************
      * CUSTOM ERROR MESSAGES
@@ -598,19 +888,36 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     nga.configure(admin);
 }]);
 
-},{"./custom/errorHandlers/admin":1,"./custom/errorHandlers/appLevel":2,"./custom/interceptors/stamplay":3,"./models/pitcher_workload":5,"./models/pitchers":6,"./models/pitching_data":7,"./models/role":8,"./models/team_members":9,"./models/teams":10,"./models/users":11,"admin-config/lib/Field/Field":12}],5:[function(require,module,exports){
+},{"./custom/customFields/changeUserRole/config":1,"./custom/customFields/changeUserRole/directive":2,"./custom/customFields/changeUserRole/view":3,"./custom/customFields/stamplay_email_field/config":4,"./custom/customFields/stamplay_email_field/directive":5,"./custom/customFields/stamplay_email_field/view":6,"./custom/errorHandlers/admin":7,"./custom/errorHandlers/appLevel":8,"./custom/interceptors/stamplay":9,"./models/issues":11,"./models/pitcher_workload":12,"./models/pitchers":13,"./models/pitching_data":14,"./models/role":15,"./models/team_members":16,"./models/teams":17,"./models/users":18,"admin-config/lib/Field/Field":19}],11:[function(require,module,exports){
+'use strict';
+
+module.exports = function (nga, issues, user) {
+
+	// LIST VIEW
+	issues.listView().title('All App Issues').fields([nga.field('message').label('Issue'), nga.field('dt_create', 'date').label('Created').format('short')]).listActions(['show', 'delete']).filters([nga.field('email').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	issues.showView().title('App Issue').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name').label('User'), nga.field('email').label('User Email'), nga.field('message').label('Issue')]);
+
+	// DELETION VIEW
+	issues.deletionView().title('Delete Issue');
+
+	return issues;
+};
+
+},{}],12:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitcher_workload, pitchers, user) {
 
 	// LIST VIEW
-	pitcher_workload.listView().title('All Pitcher\'s Workload').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name')), nga.field('game_date', 'date').label('Game Date').format('shortDate'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).sortField('name').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	pitcher_workload.listView().title('All Pitcher Workload').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('game_date', 'date').label('Game Date').format('shortDate'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'edit', 'delete']).filters([nga.field('unique_id').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
 
 	// SHOW VIEW
-	pitcher_workload.showView().title('Pitcher\'s Workload').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name')), nga.field('game_date', 'date').label('Game Date').format('shortDate'), nga.field('number_innings').label('Inning Count'), nga.field('number_pitches').label('Ptich Count'), nga.field('note', 'wysiwyg')]);
+	pitcher_workload.showView().title('Pitcher\'s Workload').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('game_date', 'date').label('Game Date').format('shortDate'), nga.field('number_innings').label('Inning Count'), nga.field('number_pitches').label('Ptich Count'), nga.field('note', 'wysiwyg')]);
 
 	// CREATION VIEW
-	pitcher_workload.creationView().title('Add Pitcher\'s Workload').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name')).sortField('name').sortDir('ASC'), nga.field('game_date', 'date').label('Game Date'), nga.field('number_innings').label('Inning Count'), nga.field('number_pitches').label('Ptich Count'), nga.field('note', 'wysiwyg')]);
+	pitcher_workload.creationView().title('Add Pitcher\'s Workload').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('game_date', 'date').label('Game Date'), nga.field('number_innings').label('Inning Count'), nga.field('number_pitches').label('Ptich Count'), nga.field('note', 'wysiwyg')]);
 
 	// EDITION VIEW
 	pitcher_workload.editionView().title('Edit Pitcher\'s Workload').fields(pitcher_workload.creationView().fields());
@@ -621,46 +928,94 @@ module.exports = function (nga, pitcher_workload, pitchers, user) {
 	return pitcher_workload;
 };
 
-},{}],6:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitchers, teams, user) {
 
 	// LIST VIEW
-	pitchers.listView().title('All Pitchers').fields([nga.field('name'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).sortField('name').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	pitchers.listView().title('All Pitchers').fields([nga.field('unique_id').label('Pitcher'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
 
 	// SHOW VIEW
-	pitchers.showView().title('"{{ entry.values.name }}"').fields([nga.field('id'), nga.field('unique_id').label('Unique ID'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))
-	// nga.field('baselines')
-	]);
+	pitchers.showView().title('"{{ entry.values.unique_id }}"').fields([
+	// nga.field('id'),
+	nga.field('unique_id').label('Unique ID'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'),
+	// nga.field('name'),
+	nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('baselines', 'json')]);
 
 	// CREATION VIEW
-	pitchers.creationView().title('Add Pitcher').fields([nga.field('name'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')).sortField('name').sortDir('ASC')]);
+	//  pitchers.creationView()
+	//  	.title('Add Pitcher')
+	//  	.fields([
+	//  		nga.field('name'),
+	//  		nga.field('age'),
+	// 	nga.field('height').label('Height (inches)'),
+	// 	nga.field('weight').label('Weight (lbs)'),
+	// 	nga.field('stride_length').label('Stride Length (inches)'),
+	// 	nga.field('device_height').label('Device Height (inches)'),
+	// 	nga.field('team', 'reference')
+	// 		.label('Team')
+	//        .targetEntity(teams)
+	//        .targetField(nga.field('name'))
+	//        .sortField('name')
+	//        .sortDir('ASC')
+	// ])
+	// .onSubmitSuccess(['entry','entity','$http','$state', function(entry,entity,$http,$state){
+	// 	function s4() {
+	// 			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+	// 		}
+	// 	function guid() {
+	// 			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+	// 	}
+	// 	var uuid = guid();
+	// 	var pitcherID = entry._identifierValue;
+	// 		console.log('unique_id', uuid);
+	// 		console.log('pitcherID', pitcherID);
+	// 		$http.put('https://pitchingdata.stamplayapp.com/api/cobject/v1/pitchers/' + pitcherID, { unique_id:uuid })
+	// 			.then(function(response){
+	// 				$state.go($state.get('show'), { entity: entity.name(), id: response.data._id });
+	// 			});
+
+	// 		return false;
+	// }])
+
 
 	// EDITION VIEW
-	pitchers.editionView().title('Edit "{{ entry.values.name }}"').fields(pitchers.creationView().fields());
+	//  pitchers.editionView()
+	//  .title('Edit "{{ entry.values.unique_id }}"')
+	//  .fields([
+	//  		nga.field('name'),
+	//  		nga.field('age'),
+	// 	nga.field('height').label('Height (inches)'),
+	// 	nga.field('weight').label('Weight (lbs)'),
+	// 	nga.field('stride_length').label('Stride Length (inches)'),
+	// 	nga.field('device_height').label('Device Height (inches)')
+	// ])
 
 	// DELETION VIEW
-	pitchers.deletionView().title('Delete "{{ entry.values.name }}"');
+	pitchers.deletionView().title('Delete "{{ entry.values.unique_id }}"');
 
 	return pitchers;
 };
 
-},{}],7:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
-module.exports = function (nga, pitchingData, pitchers, user) {
+module.exports = function (nga, pitching_data, pitchers, pitcher_workload, user) {
 
 	// LIST VIEW
-	pitchingData.listView().title('All data').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('mainValue')]).sortField('pitcher').sortDir('ASC').listActions(['show']).filters([nga.field('pitcher').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	pitching_data.listView().title('All Pitching Data').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('unique_id')]);
 
 	// SHOW VIEW
-	pitchingData.showView().title('"{{ entry.values.mainValue }}"').fields([nga.field('id'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('mainValue'), nga.field('note'), nga.field('pulls', 'json')]);
+	pitching_data.showView().title('Pitching Data').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('pulls', 'json'), nga.field('note', 'wysiwyg')]);
 
-	return pitchingData;
+	// DELETION VIEW
+	pitching_data.deletionView().title('Delete Pitching Data');
+
+	return pitching_data;
 };
 
-},{}],8:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, role) {
@@ -674,7 +1029,7 @@ module.exports = function (nga, role) {
     return role;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, team_members, teams, user) {
@@ -689,7 +1044,7 @@ module.exports = function (nga, team_members, teams, user) {
 	team_members.creationView().title('Add Team Member').fields([nga.field('name'), nga.field('email', 'email'), nga.field('phone'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')).sortField('name').sortDir('ASC')]);
 
 	// EDITION VIEW
-	team_members.editionView().title('Edit "{{ entry.values.name }}"').fields(team_members.creationView().fields());
+	team_members.editionView().title('Edit "{{ entry.values.name }}"').fields([nga.field('name'), nga.field('email', 'email'), nga.field('phone'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
 
 	// DELETION VIEW
 	team_members.deletionView().title('Delete "{{ entry.values.name }}"');
@@ -697,7 +1052,7 @@ module.exports = function (nga, team_members, teams, user) {
 	return team_members;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, teams, user) {
@@ -720,35 +1075,25 @@ module.exports = function (nga, teams, user) {
 	return teams;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
-module.exports = function (nga, users, roles) {
+module.exports = function (nga, users, roles, teams) {
 
     // LIST VIEW
-    users.listView().fields([nga.field('displayName').label('Username'), nga.field('id'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }]), nga.field('dt_create', 'date').label('Created').format('short')]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);;
+    users.listView().fields([nga.field('displayName').label('Username'), nga.field('givenRole', 'reference').label('User Role').cssClasses('capitalize').targetEntity(roles).targetField(nga.field('name')), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]).sortField('displayName').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('_id'), nga.field('displayName').label('User Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>'), nga.field('email').label('Email')]);
 
     // SHOW VIEW
-    users.showView().title('"{{ entry.values.displayName }}" Profile').fields([nga.field('id'),
-    // nga.field('givenrole','change_role_dropdown')
-    //     .label('Role'),
-    nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short'), nga.field('firstName'), nga.field('lastName'), nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email'), nga.field('profile', 'template').label('Profile Image').template('<img src="{{ entry.values.profile }}" style="max-width: 50px; height: auto;" />'), nga.field('paid', 'boolean').choices([{ value: true, label: 'yes' }, { value: false, label: 'no' }])]);
+    users.showView().title('"{{ entry.values.displayName }}" Profile').fields([nga.field('id'), nga.field('givenrole', 'change_role_dropdown').label('Role'), nga.field('displayName').label('Username'), nga.field('publicEmail').label('Email'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Last Update').format('short')]);
 
     // CREATION VIEW
-    users.creationView().fields([nga.field('firstName'), nga.field('lastName'), nga.field('displayName'),
-    // nga.field('email','stamplay_email_field')
-    //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
-    //     .cssClasses('hidden-email'),
-    nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password'),
-    // nga.field('givenrole','change_role_dropdown')
-    //     .label('Role'),
-    nga.field('paid', 'boolean').choices([{ value: true, label: 'Yes' }, { value: false, label: 'No' }])]).prepare(function (entry) {
+    users.creationView().fields([nga.field('displayName').label('Username').validation({ required: true }), nga.field('email', 'stamplay_email_field').template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>', true).cssClasses('hidden-email'), nga.field('publicEmail').validation({ required: true }).label('Email'), nga.field('password').validation({ required: true }), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')).validation({ required: true })]).prepare(function (entry) {
         // entry.values.email = entry.values.publicEmail;
         entry.values.email = 'test@test.com';
     });
 
     // EDITION VIEW
-    users.editionView().title('Edit "{{ entry.values.displayName }}"').fields(users.creationView().fields());
+    users.editionView().title('Edit "{{ entry.values.displayName }}"').fields([nga.field('displayName').label('Username'), nga.field('email', 'stamplay_email_field').template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>', true).cssClasses('hidden-email'), nga.field('publicEmail').label('Email'), nga.field('password'), nga.field('givenrole', 'change_role_dropdown').label('Role'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name'))]);
 
     // DELETION VIEW
     users.deletionView().title('Delete "{{ entry.values.displayName }}"');
@@ -756,7 +1101,7 @@ module.exports = function (nga, users, roles) {
     return users;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1056,7 +1401,92 @@ var Field = (function () {
 exports["default"] = Field;
 module.exports = exports["default"];
 
-},{"../Utils/stringUtils":13}],13:[function(require,module,exports){
+},{"../Utils/stringUtils":22}],20:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _Field2 = require("./Field");
+
+var _Field3 = _interopRequireDefault(_Field2);
+
+var FileField = (function (_Field) {
+    function FileField(name) {
+        _classCallCheck(this, FileField);
+
+        _get(Object.getPrototypeOf(FileField.prototype), "constructor", this).call(this, name);
+        this._type = "file";
+        this._uploadInformation = {
+            url: "/upload",
+            accept: "*"
+        };
+    }
+
+    _inherits(FileField, _Field);
+
+    _createClass(FileField, [{
+        key: "uploadInformation",
+        value: function uploadInformation(information) {
+            if (!arguments.length) return this._uploadInformation;
+            this._uploadInformation = information;
+            return this;
+        }
+    }]);
+
+    return FileField;
+})(_Field3["default"]);
+
+exports["default"] = FileField;
+module.exports = exports["default"];
+
+},{"./Field":19}],21:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; desc = parent = getter = undefined; _again = false; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
+
+var _Field2 = require("./Field");
+
+var _Field3 = _interopRequireDefault(_Field2);
+
+var TextField = (function (_Field) {
+    function TextField(name) {
+        _classCallCheck(this, TextField);
+
+        _get(Object.getPrototypeOf(TextField.prototype), "constructor", this).call(this, name);
+        this._type = "text";
+    }
+
+    _inherits(TextField, _Field);
+
+    return TextField;
+})(_Field3["default"]);
+
+exports["default"] = TextField;
+module.exports = exports["default"];
+
+},{"./Field":19}],22:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1082,7 +1512,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{}],14:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * humane.js
  * Humanized Messages for Notifications
@@ -1322,4 +1752,4 @@ module.exports = exports['default'];
    return new Humane()
 });
 
-},{}]},{},[4]);
+},{}]},{},[10]);

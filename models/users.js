@@ -1,4 +1,4 @@
-module.exports = function(nga,users,roles) {
+module.exports = function(nga,users,roles,teams) {
 
     // LIST VIEW
     users.listView()
@@ -9,7 +9,10 @@ module.exports = function(nga,users,roles) {
         	.cssClasses('capitalize')
         	.targetEntity(roles)
         	.targetField(nga.field('name')),
-        nga.field('dt_create', 'date').label('Created').format('short')
+        nga.field('team', 'reference')
+            .label('Team')
+            .targetEntity(teams)
+            .targetField(nga.field('name'))
     ])
     .sortField('displayName')
     .sortDir('ASC')
@@ -29,10 +32,14 @@ module.exports = function(nga,users,roles) {
     .title('"{{ entry.values.displayName }}" Profile')
     .fields([
         nga.field('id'),
-        // nga.field('givenrole','change_role_dropdown')
-        //     .label('Role'),
+        nga.field('givenrole','change_role_dropdown')
+            .label('Role'),
         nga.field('displayName').label('Username'),
         nga.field('publicEmail').label('Email'),
+        nga.field('team', 'reference')
+            .label('Team')
+            .targetEntity(teams)
+            .targetField(nga.field('name')),
         nga.field('dt_create', 'date').label('Created').format('short'),
         nga.field('dt_update', 'date').label('Last Update').format('short'),
         
@@ -42,16 +49,23 @@ module.exports = function(nga,users,roles) {
     users.creationView()
     .fields([
         nga.field('displayName')
-            .label('Username'),
-        // nga.field('email','stamplay_email_field')
-        //     .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
-        //     .cssClasses('hidden-email'),
+            .label('Username')
+            .validation({ required: true }),
+        nga.field('email','stamplay_email_field')
+            .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
+            .cssClasses('hidden-email'),
         nga.field('publicEmail')
             .validation({ required: true })
             .label('Email'),
-        nga.field('password'),
+        nga.field('password')
+            .validation({ required: true }),
+        nga.field('team', 'reference')
+            .label('Team')
+            .targetEntity(teams)
+            .targetField(nga.field('name'))
+            .validation({ required: true }),
         // nga.field('givenrole','change_role_dropdown')
-        //     .label('Role'),
+        //     .label('Role')
     ])
     .prepare((entry) => {
         // entry.values.email = entry.values.publicEmail;
@@ -61,7 +75,22 @@ module.exports = function(nga,users,roles) {
     // EDITION VIEW
     users.editionView()
     .title('Edit "{{ entry.values.displayName }}"')
-    .fields(users.creationView().fields());
+    .fields([
+        nga.field('displayName')
+            .label('Username'),
+        nga.field('email','stamplay_email_field')
+            .template('<stamplay-email-field field="::field" datastore="::datastore" value="::entry.values[field.name()]" viewtype="edit"></stamplay-email-field>',true)
+            .cssClasses('hidden-email'),
+        nga.field('publicEmail')
+            .label('Email'),
+        nga.field('password'),
+        nga.field('givenrole','change_role_dropdown')
+            .label('Role'),
+        nga.field('team', 'reference')
+            .label('Team')
+            .targetEntity(teams)
+            .targetField(nga.field('name')),
+    ])
     
     // DELETION VIEW
     users.deletionView()

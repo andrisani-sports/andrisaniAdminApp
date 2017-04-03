@@ -1,41 +1,40 @@
-module.exports = function(nga,pitchingData,pitchers,user) {
+
+module.exports = function(nga,pitching_data,pitchers,pitcher_workload,user) {
 
 	// LIST VIEW
-  pitchingData.listView()
-	  .title('All data')
+  pitching_data.listView()
+	  .title('All Pitching Data')
 	  .fields([
 	      nga.field('pitcher', 'reference')
-			.label('Pitcher')
-          	.targetEntity(pitchers)
-          	.targetField(nga.field('unique_id')),
+					.label('Pitcher')
+          .targetEntity(pitchers)
+          .targetField(nga.field('unique_id')),
 	      nga.field('dt_create', 'date').label('Created').format('short'),
 	      nga.field('dt_update', 'date').label('Updated').format('short'),
-	      nga.field('mainValue'),
 	  ])
-	  .sortField('pitcher')
-	  .sortDir('ASC')
-	  .listActions(['show'])
+	  .listActions(['show','delete'])
 	  .filters([
-	      nga.field('pitcher')
-	          .pinned(true)
-	          .template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')
+	      nga.field('unique_id')
 	  ])
 
-	// SHOW VIEW
-	pitchingData.showView()
-	.title('"{{ entry.values.mainValue }}"')
+  // SHOW VIEW
+  pitching_data.showView()
+	.title('Pitching Data')
 	.fields([
-		nga.field('id'),
-		nga.field('pitcher', 'reference')
-			.label('Pitcher')
-			.targetEntity(pitchers)
-			.targetField(nga.field('unique_id')),
+	    nga.field('id'),
 		nga.field('dt_create', 'date').label('Created').format('short'),
 		nga.field('dt_update', 'date').label('Updated').format('short'),
-		nga.field('mainValue'),
-		nga.field('note'),
-		nga.field('pulls','json')
+		nga.field('pitcher', 'reference')
+		  .label('Pitcher')
+          .targetEntity(pitchers)
+          .targetField(nga.field('unique_id')),
+        nga.field('pulls','json'),
+        nga.field('note', 'wysiwyg')
 	])
+    
+    // DELETION VIEW
+    pitching_data.deletionView()
+     .title('Delete Pitching Data')
 
-    return pitchingData;
+    return pitching_data;
 };
