@@ -1,5 +1,9 @@
 module.exports = function(nga,teams,user) {
 
+	var listViewActionsTemplate = '<upload-excel-button entry="entry"></upload-excel-button>' + 
+	'<ma-export-to-csv-button entity="::entity" datastore="::datastore"></ma-export-to-csv-button>' +
+	'<ma-create-button entity-name="teams" size="md" label="Create" default-values="{ post_id: entry.values.id }"></ma-create-button>';
+
 	// LIST VIEW
   teams.listView()
 	  .title('All Teams')
@@ -17,6 +21,7 @@ module.exports = function(nga,teams,user) {
 	          .pinned(true)
 	          .template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')
 	  ])
+	  //.actions(listViewActionsTemplate)
 
   // SHOW VIEW
   teams.showView()

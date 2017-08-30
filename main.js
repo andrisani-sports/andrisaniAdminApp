@@ -3,10 +3,28 @@
  ***************************************/
 
 var myApp = angular.module('myApp', 
-    [
-        'ng-admin'
-    ]
+    [ 'ng-admin', 'angular-js-xlsx' ]
 );
+
+myApp.factory('sampleService', ['$rootScope','Restangular', 
+function($rootScope,Restangular) {
+
+    return {
+        test: function(){
+            Restangular.one('teams')
+            .get()
+            .then(function(result){
+console.log('result',result);
+                var temp = result.plain();
+                $rootScope.teamsList = temp;
+            })
+            .catch(function(error){
+                return false;
+            });
+        }
+    }
+
+}]);
 
 /***************************************
  * API AUTHENTICATION
@@ -43,7 +61,36 @@ myApp.controller('username', ['$scope', '$window', function($scope, $window) { /
  * http://ng-admin-book.marmelab.com/doc/Custom-pages.html
  ***************************************/
 
+import uploadExcelController from './custom/pages/upload-excel/controller';
+import uploadExcelTemplate from './custom/pages/upload-excel/template';
+myApp.config(function ($stateProvider) {
+    $stateProvider.state('upload-excel', {
+        parent: 'ng-admin',
+        url: '/upload-excel/',
+        params: { teamId: null },
+        controller: uploadExcelController,
+        controllerAs: 'upload',
+        template: uploadExcelTemplate,
+        resolve: {
+            getTeams: ['$rootScope',function(){
+// console.log('$rootScope',$rootScope);
+            }]
+        }
+    });
+});
 
+import globalChartController from './custom/pages/global-chart/controller';
+import globalChartTemplate from './custom/pages/global-chart/template';
+myApp.config(function ($stateProvider) {
+    $stateProvider.state('global-chart', {
+        parent: 'ng-admin',
+        url: '/global-chart/',
+        params: { },
+        controller: globalChartController,
+        controllerAs: 'globalchart',
+        template: globalChartTemplate
+    });
+});
 
 /***************************************
  * CUSTOMIZING NG-ADMIN DIRECTIVES
@@ -95,6 +142,15 @@ import StamplayEmailFieldConfig from './custom/customFields/stamplay_email_field
 import StamplayEmailFieldView from './custom/customFields/stamplay_email_field/view';
 import stamplayEmailFieldDirective from './custom/customFields/stamplay_email_field/directive';
 
+// upload Excel directive
+import UploadExcelButtonDirective from './custom/customFields/UploadExcel/directive';
+
+// pitcher chart (Chartist)
+import pitcherChartDirective from './custom/customFields/pitcher_chart/directive';
+
+// global chart
+import globalChartButtonDirective from './custom/pages/global-chart/directive-button';
+
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function(nga) {
     nga.registerFieldType('change_role_dropdown',changeRoleFieldConfig);
@@ -107,6 +163,9 @@ myApp.config(['FieldViewConfigurationProvider', function(fvp) {
 
 myApp.directive('changeUserRole',changeRoleFieldDirective);
 myApp.directive('stamplayEmailField',stamplayEmailFieldDirective);
+myApp.directive('uploadExcelButton',UploadExcelButtonDirective);
+myApp.directive('pitcherChart',pitcherChartDirective);
+myApp.directive('globalChartButton',globalChartButtonDirective);
   
 
 /***************************************
@@ -159,7 +218,11 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
 
     // app issues
     var createIssue = require('./models/issues');
-    var issues = nga.entity('issues');    
+    var issues = nga.entity('issues');
+
+    // pitcher injuries
+    var createInjuries = require('./models/injuries');
+    var injuries = nga.entity('injuries');
 
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga,roles));
@@ -168,9 +231,9 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
     admin.addEntity(createTeamMembers(nga,team_members,teams,userEntity));
     admin.addEntity(createPitchers(nga,pitchers,teams,userEntity));
     admin.addEntity(createPitcherWorkload(nga,pitcher_workload,pitchers,userEntity));
-    // admin.addEntity(createPitchingData(nga,pitching_data,pitchers,userEntity));
     admin.addEntity(createPitchingData(nga,pitching_data,pitchers,pitcher_workload,userEntity));
     admin.addEntity(createIssue(nga,issues,userEntity));
+    admin.addEntity(createInjuries(nga,injuries,pitchers,userEntity));
     
 /***************************************
  * CUSTOM MENU
@@ -186,6 +249,7 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
             .addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
             .addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))
             .addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;'))
+            .addChild(nga.menu(nga.entity('injuries')).title('Pitcher Injuries').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;'))
         .addChild(nga.menu().template(`<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>`))
             .addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;'))
     );
@@ -193,26 +257,27 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
 /***************************************
  * CUSTOM HEADER
  ***************************************/
-    var customHeaderTemplate =
-    '<div class="navbar-header">' +
-        '<button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">' +
-          '<span class="icon-bar"></span>' +
-          '<span class="icon-bar"></span>' +
-          '<span class="icon-bar"></span>' +
-        '</button>' +
-        '<a class="navbar-brand" href="#" ng-click="appController.displayHome()">Shoulder Saver</a>' +
-    '</div>' +
-
-    '<ul class="nav navbar-top-links navbar-right hidden-xs">' +
-        '<li class="dropdown">' +
-            '<a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">' +
-                '<i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>' +
-            '</a>' +
-            '<ul class="dropdown-menu dropdown-user" role="menu">' +
-                '<li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>' +
-            '</ul>' +
-        '</li>' +
-    '</ul>';
+    var customHeaderTemplate = `
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#" ng-click="appController.displayHome()" style="margin-right:10px;">Shoulder Saver</a>
+    </div>
+    <upload-excel-button entry="entry" style="display: inline-block;margin-top: 8px;"></upload-excel-button>
+    <global-chart-button entry="entry" style="display: inline-block;margin-top: 8px;"></global-chart-button>
+    <ul class="nav navbar-top-links navbar-right hidden-xs">
+        <li class="dropdown">
+            <a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">
+                <i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-user" role="menu">
+                <li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>
+            </ul>
+        </li>
+    </ul>`;
 
     admin.header(customHeaderTemplate);
 

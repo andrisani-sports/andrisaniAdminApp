@@ -86,7 +86,6 @@ module.exports = function(myApp) {
 	            request : function(config) {
 
 	                config = angular.copy(config);
-
 	                if(config.method == 'POST'){
 	                	for(var i in config.data){
 	                		if(config.data[i] === null){
@@ -94,7 +93,6 @@ module.exports = function(myApp) {
 	                			delete config.data[i];
 	                		}
 	                	}
-
 	             		if(config && config.data && config.data.zones_arr){
 	             			var zones = config.data.zones_arr;
 	             			for(var i in zones){
@@ -213,7 +211,8 @@ module.exports = function(myApp) {
 	                }
 
 // // TRYING TO GET REFERENCES TO WORK IN SITUATIONS MODEL
-// // the code below makes a reference field (page in situations) to have [Object object] instead of the record id
+// // the code below makes a reference field (page in situations) to 
+// // have [Object object] instead of the record id
 // if(config.method == 'GET' && config.params)
 // 	config.params.populate = 'true';
 // else if(config.method == 'GET' && !config.params){

@@ -1,4 +1,31 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+       value: true
+});
+function uploadExcelButtonDirective($location, $rootScope, $state) {
+
+       function controller() {}
+
+       return {
+              restrict: 'E', // bind to attribute of element?
+              controller: controller,
+              link: function link(scope, element, attrs) {
+                     scope.goToUploadPage = function () {
+                            // $location.path('/upload-excel/');
+                            $state.go('upload-excel');
+                     };
+              },
+              template: '<a class="btn btn-default btn-sm" type="button" ng-click="goToUploadPage()">Upload Excel</a>'
+       };
+}
+
+uploadExcelButtonDirective.$inject = ['$location', '$rootScope', '$state'];
+
+exports.default = uploadExcelButtonDirective;
+
+},{}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34,7 +61,7 @@ var ChangeRoleField = function (_FileField) {
 
 exports.default = ChangeRoleField;
 
-},{"admin-config/lib/Field/FileField":20}],2:[function(require,module,exports){
+},{"admin-config/lib/Field/FileField":28}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -121,7 +148,7 @@ changeRoleField.$inject = ['Restangular'];
 
 exports.default = changeRoleField;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -142,7 +169,123 @@ exports.default = {
     }
 };
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+// this is an alternative approach: https://github.com/willsoto/angular-chartist.js
+
+function pitcherChartDirective(Restangular) {
+
+  var options = {
+    width: '600px',
+    height: '350px',
+    axisX: {},
+    axisY: {}
+  };
+
+  function controller() {}
+
+  function link(scope, attrs, element) {
+    // Chartist is available here
+    var pitcher = scope.entry.values.plain();
+
+    var pitcherId = [];
+    pitcherId.push(pitcher.id);
+
+    var data = {
+      pitcher: pitcherId
+    };
+    Restangular.one('pitching_data').get(data).then(function (result) {
+      result = result.data.plain();
+
+      ///////////////////////////////////////////////////
+      // get the injuries for this pitcher from Stamplay
+      // add an asterisk to labels list for each date with an injury
+      // (add a column for date of injury if no pull for that date)
+      ///////////////////////////////////////////////////
+
+      var chartDataTop = [];
+      var chartDataBottom = [];
+      var chartLabels = [];
+      var datesList = [];
+      var currDate;
+      var temp;
+
+      // make an array of unique dates
+      for (var i in result) {
+        if (result[i]['originalPullTimestamp']) {
+          temp = new Date(result[i]['originalPullTimestamp']);
+          temp = temp.getMonth() + 1 + '/' + temp.getDate() + '/' + temp.getFullYear();
+          currDate = temp;
+          if (datesList.indexOf(currDate) < 0) datesList.push(currDate);
+        }
+      }
+
+      chartLabels = angular.copy(datesList);
+
+      for (var i in datesList) {
+        datesList[i] = new Date(datesList[i]);
+      } // sort the list of dates
+      datesList.sort(function (a, b) {
+        return a - b;
+      });
+
+      for (var i in chartLabels) {
+        var temp = [];
+        result.map(function (e) {
+          if (e.originalPullTimestamp) {
+            var tempDate = new Date(e.originalPullTimestamp);
+            tempDate = tempDate.getMonth() + 1 + '/' + tempDate.getDate() + '/' + tempDate.getFullYear();
+            if (tempDate == chartLabels[i]) {
+              temp.push(e.mainValue);
+            }
+          }
+        });
+        if (temp.length == 1) {
+          temp[1] = temp[0];
+        }
+        console.log('temp', temp);
+        chartDataTop.push(temp[0]);
+        chartDataBottom.push(temp[1]);
+      }
+
+      var dataSetting = { labels: chartLabels, series: [[]] };
+      var targetDiv = '#pitcher-chart';
+      var charts = {};
+
+      charts[targetDiv] = new Chartist.Line(targetDiv, dataSetting, options);
+
+      charts[targetDiv].data.series.push([]); // add a series
+      charts[targetDiv].data.series[0] = chartDataTop;
+      charts[targetDiv].data.series[1] = chartDataBottom;
+      charts[targetDiv].update();
+
+      // setTimeout(function(){
+      //   var points = document.getElementsByClassName('ct-point')
+      //   for(var i = 0; i < points.length; i++)
+      //     points[i].addEventListener('click', clickHandler);
+      // }, 300);
+    }).catch(function (error) {
+      console.log('error', error);
+    });
+  }
+
+  return {
+    restrict: 'EA',
+    controller: controller,
+    link: link,
+    template: '<div>\n      <style>\n        .ct-label.ct-horizontal { position: relative; transform: rotate(45deg); transform-origin: left top; color: black !important;font-weight: 600; font-size: 10px;}\n        .ct-series-a .ct-line, .ct-series-a .ct-point{\n          stroke: #fff !important; /*#0CC162;*/\n        }\n        .ct-series-b .ct-bar, .ct-series-b .ct-line, .ct-series-b .ct-point, .ct-series-b .ct-slice-donut {\n          stroke: #BBBBBB;\n        }\n      </style>\n      <div id="pitcher-chart" class="ct-chart ct-perfect-fourth"></div>\n    </div>'
+  };
+}
+
+pitcherChartDirective.inject = ['Restangular'];
+
+exports.default = pitcherChartDirective;
+
+},{}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -193,7 +336,7 @@ var StamplayEmailFieldConfig = function (_TextField) {
 
 exports.default = StamplayEmailFieldConfig;
 
-},{"admin-config/lib/Field/TextField":21}],5:[function(require,module,exports){
+},{"admin-config/lib/Field/TextField":29}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -221,7 +364,7 @@ stamplayEmailFieldDirective.$inject = [];
 
 exports.default = stamplayEmailFieldDirective;
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -246,7 +389,7 @@ exports.default = {
    }
 };
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 module.exports = function (admin) {
@@ -313,7 +456,7 @@ module.exports = function (admin) {
     return admin;
 };
 
-},{"humane-js":23}],8:[function(require,module,exports){
+},{"humane-js":31}],10:[function(require,module,exports){
 'use strict';
 
 module.exports = function (myApp) {
@@ -374,7 +517,7 @@ module.exports = function (myApp) {
 		return myApp;
 };
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
@@ -463,7 +606,6 @@ module.exports = function (myApp) {
 				request: function request(config) {
 
 					config = angular.copy(config);
-
 					if (config.method == 'POST') {
 						for (var i in config.data) {
 							if (config.data[i] === null) {
@@ -471,7 +613,6 @@ module.exports = function (myApp) {
 								delete config.data[i];
 							}
 						}
-
 						if (config && config.data && config.data.zones_arr) {
 							var zones = config.data.zones_arr;
 							for (var i in zones) {
@@ -583,7 +724,8 @@ module.exports = function (myApp) {
 					}
 
 					// // TRYING TO GET REFERENCES TO WORK IN SITUATIONS MODEL
-					// // the code below makes a reference field (page in situations) to have [Object object] instead of the record id
+					// // the code below makes a reference field (page in situations) to 
+					// // have [Object object] instead of the record id
 					// if(config.method == 'GET' && config.params)
 					// 	config.params.populate = 'true';
 					// else if(config.method == 'GET' && !config.params){
@@ -663,8 +805,472 @@ module.exports = function (myApp) {
 	});
 };
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function globalChartController($stateParams, notification, $scope, $rootScope, Restangular, $timeout, $q) {
+
+    // notification is the service used to display notifications on the top of 
+    // the screen
+    this.notification = notification;
+
+    // Instantiate variables
+    $scope.rawPitchingData = [];
+    var chartData;
+    var chartLabels = [];
+
+    // Setup chart
+    var options = {
+        axisX: {},
+        axisY: {}
+    };
+
+    function getPitcherData() {
+        Restangular.one('pitching_data').get().then(function (result) {
+            var temp = result.plain();
+            var tempArr = [];
+            var datesArr = [];
+            var pitchersArr = [];
+
+            for (var i in temp) {
+                if (temp[i].originalPullTimestamp && temp[i].pitcher.length > 0) tempArr.push(temp[i]);
+            }
+
+            // get master list of dates
+            for (var i in tempArr) {
+                var currDate = tempArr[i].originalPullTimestamp;
+                currDate = new Date(currDate);
+                currDate = currDate.getMonth() + 1 + '/' + currDate.getDate() + '/' + currDate.getFullYear();
+                if (datesArr.indexOf(currDate) < 0) datesArr.push(currDate);
+            }
+            datesArr = datesArr.map(function (e) {
+                return new Date(e);
+            });
+            datesArr.sort(function (a, b) {
+                return a > b;
+            });
+            datesArr = datesArr.map(function (e) {
+                return e.getMonth() + 1 + '/' + e.getDate() + '/' + e.getFullYear();
+            });
+
+            // group data by pitchers
+            for (var i in tempArr) {
+                var currPitcher = tempArr[i].pitcher[0];
+                if (pitchersArr.indexOf(currPitcher) < 0) pitchersArr.push(currPitcher);
+            }
+            console.log('pitchersArr', pitchersArr);
+            // group pitcher data by dates
+            // get series (2 entries in series per pitcher, one value 
+            // per series entry per master timestamp array)
+            for (var i in tempArr) {
+
+                /////////////////////////////// FINISH
+
+            }
+        }).catch(function (error) {
+            return false;
+        });
+    };
+
+    getPitcherData();
+
+    // Instantiate the chart
+    var dataSetting = { labels: chartLabels, series: [[]] };
+    var targetDiv = '#global-chart';
+    var charts = {};
+
+    charts[targetDiv] = new Chartist.Line(targetDiv, dataSetting, options);
+
+    charts[targetDiv].data.series.push([]); // add a series
+    for (var i in chartData) {
+        charts[targetDiv].data.series.push(chartData[i]);
+    }
+    charts[targetDiv].update();
+};
+
+globalChartController.inject = ['$stateParams', 'notification', '$scope', '$rootScope', 'Restangular', '$timeout', '$q'];
+
+exports.default = globalChartController;
+
+},{}],13:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function globalChartButtonDirective($location) {
+
+  function controller() {}
+
+  return {
+    restrict: 'E', // bind to attribute of element?
+    controller: controller,
+    link: function link(scope, element, attrs) {
+      scope.goToChartPage = function () {
+        $location.path('/global-chart/'); // + scope.post().values.id
+      };
+    },
+    template: '<a class="btn btn-default btn-sm" ng-click="goToChartPage()">Global Chart</a>'
+  };
+}
+
+globalChartButtonDirective.$inject = ['$location'];
+
+exports.default = globalChartButtonDirective;
+
+},{}],14:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+var globalChartTemplate = "<!--  ROW  -->\n<div class=\"row\">\n\t<div class=\"col-lg-12\">\n\t\t<h1 class=\"page-header\" style=\"font-family: 'Lobster', cursive;color: #7a848e;\">Global Chart</h1>\n    \t<span style=\"display:block;height:20px;width:100%\"></span>\n    \t<div id=\"global-chart\"></div>\n\t</div>\n</div>";
+
+exports.default = globalChartTemplate;
+
+},{}],15:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function uploadExcelController($stateParams, notification, $scope, $rootScope, Restangular, $timeout, $q) {
+
+    $rootScope.currPlayerSelected = {};
+    $rootScope.teamsList = [];
+
+    $scope.matrix = [];
+    $scope.playerChoice = '1';
+    $scope.teamChoice = '';
+    $scope.currPlayersList = [];
+    $scope.playerNumberToIdMap = [];
+    $scope.dataForCloud = [];
+
+    // notification is the service used to display notifications on the top of 
+    // the screen
+    this.notification = notification;
+
+    function getTeams() {
+        Restangular.one('teams').get().then(function (result) {
+            if (result.data) result = result.data;
+            var temp = result.plain();
+            $rootScope.teamsList = temp;
+        }).catch(function (error) {
+            return false;
+        });
+    };
+
+    getTeams();
+
+    /**
+     * UPLOAD FUNCTION (ALSO CLEANS DATA)
+     */
+
+    function uploadRead(workbook) {
+
+        function transposeMatrixArr(matrix) {
+            return matrix[0].map(function (col, i) {
+                return matrix.map(function (row) {
+                    return row[i];
+                });
+            });
+        }
+
+        var sheet = workbook.Sheets.Sheet1;
+        var letter;
+        var matrix = [];
+        var matrixObj = {};
+        var temp;
+        var currPlayer;
+        var playerArray = {};
+
+        $scope.playerArray = [];
+        $scope.dataForCloud = [];
+        $scope.matrix = [];
+
+        // make matrix 
+        for (var i in sheet) {
+            letter = i.substr(0, 1);
+            if (letter != '!') {
+                if (!matrixObj[letter]) matrixObj[letter] = [];
+                if (sheet[i].w) temp = sheet[i].w;else temp = sheet[i].v;
+                matrixObj[letter].push(temp);
+            }
+        }
+
+        // convert matrix object to 2 dimensional array
+        for (var i in matrixObj) {
+            matrix.push(matrixObj[i]);
+        }
+
+        // get header row
+        var headerRow = [];
+        for (var column in matrix) {
+            headerRow.push(matrix[column][0]);
+            matrix[column].splice(0, 1);
+        }
+
+        // get rid of unnecessary columns 
+        // 1. analyzing the first row of the spreadsheet
+        // 2. create a map of labels to array keys, for use below
+        var tempMatrix = [];
+        var tempArray = new Array(matrix[0].length);
+        var matrixMap = [];
+        var newIndex;
+
+        if (headerRow[1] == 'Date') {
+            headerRow.splice(1, 0, 'Jersey');
+            matrix.splice(1, 0, tempArray);
+            matrix[1][0] = 'Jersey';
+        } else {
+            headerRow[1] = 'Jersey';
+        }
+        for (var key in headerRow) {
+            var columnName = headerRow[key];
+            if (columnName == 'Player' || columnName == 'Date' || columnName == 'Time' || columnName == 'Strength' || columnName == 'Jersey') {
+                newIndex = tempMatrix.push(matrix[key]);
+                matrixMap[columnName] = newIndex - 1;
+            }
+        }
+
+        // add columns for "pulls" and "raw data"
+        newIndex = tempMatrix.push(tempArray);
+        matrixMap['Pulls'] = newIndex - 1;
+        newIndex = tempMatrix.push(tempArray);
+        matrixMap['RawData'] = newIndex - 1;
+
+        matrix = angular.copy(tempMatrix);
+
+        // transpose the matrix
+        var matrix = transposeMatrixArr(matrix);
+
+        // clean up the data
+        var key;
+        var tempMatrix = [];
+
+        // merge date and time columns and convert to JS Date object
+        for (var i in matrix) {
+            key = i;
+            if (!tempMatrix[key]) {
+                tempMatrix[key] = [];
+            }
+            temp = matrix[key][matrixMap['Date']] + ' ' + matrix[key][matrixMap['Time']];
+            temp = new Date(temp);
+            matrix[key][matrixMap['Date']] = temp;
+            matrix[key].splice(matrixMap['Time'], 1);
+            matrix[key][matrixMap['Pulls']] = 1; // pulls
+            // make a pull object
+            var pullObj = {
+                1: {
+                    mainValue: matrix[key][3],
+                    rawData: 'none'
+                }
+            };
+            matrix[key][matrixMap['RawData']] = pullObj;
+            tempMatrix.push(matrix[key]);
+        }
+        matrix = angular.copy(tempMatrix);
+
+        $scope.$apply(function () {
+            $scope.matrix = matrix;
+        });
+
+        // get list of players from matrix
+        for (var i in matrix) {
+            if (typeof matrix[i][0] != 'undefined') {
+                currPlayer = matrix[i][0];
+                // add this pitcher number to array for use in view
+                if (!(currPlayer in playerArray)) {
+                    playerArray[matrix[i][0]] = [];
+                }
+                // add to array for mapping player id from db to player number
+                if (!(currPlayer in $scope.playerNumberToIdMap)) {
+                    $scope.playerNumberToIdMap[matrix[i][0]] = '';
+                }
+                playerArray[matrix[i][0]].push(matrix[i]);
+            }
+        }
+
+        // delete the first array, because it will be filled with all the blank 
+        // cells in the original spreadsheet
+        delete playerArray[0];
+
+        // add data to $scope
+        $scope.$apply(function () {
+            var newData = angular.copy(playerArray);
+            $scope.playerArray = playerArray;
+            $scope.dataForCloud = newData;
+        });
+    }
+
+    $scope.uploadRead = uploadRead;
+
+    /**
+     * FUNCTIONS FOR BUTTONS ON TEMPLATE
+     */
+
+    $scope.choosePlayer = function (number) {
+        $scope.playerChoice = number;
+    };
+
+    $scope.updatePlayerForData = function (playerNumber) {
+        // add the pitcher id to the data being sent to cloud
+        var pitcher = $rootScope.currPlayerSelected[playerNumber];
+        var id = pitcher.id;
+        $scope.playerNumberToIdMap[playerNumber] = id;
+    };
+
+    $scope.updatePlayerList = function () {
+        var team = $scope.teamChoice;
+        var teamId = team.id;
+        Restangular.one('pitchers').get({ team: teamId }).then(function (result) {
+            if (result.data) result = result.data;
+            var temp = result.plain();
+            $scope.currPlayersList = temp;
+        }).catch(function (error) {
+            console.log('error', error);
+        });
+    };
+
+    $scope.deleteLine = function (pitcherNumber, row, rowKey) {
+        $scope.dataForCloud[pitcherNumber].splice(rowKey, 1);
+    };
+
+    $scope.mergeLines = function (playerNumber) {
+        var mergedData = [];
+        var data = angular.copy($scope.dataForCloud[playerNumber]);
+        var lastArray;
+
+        for (var i in data) {
+            if (!lastArray) {
+                lastArray = data[i];
+            } else {
+                // push the lastArray to new array
+                // if current element gets merged
+                var temp = data[i][2] - lastArray[2];
+                if (temp < 300000) {
+                    var averageStrength = (parseFloat(lastArray[3]) + parseFloat(data[i][3])) / 2;
+                    console.log('averageStrength', averageStrength);
+                    var pullsObj = {
+                        1: {
+                            mainValue: lastArray[3],
+                            rawData: 'none'
+                        },
+                        2: {
+                            mainValue: data[i][3],
+                            rawData: 'none'
+                        }
+                    };
+                    lastArray[5]++;
+                    lastArray[3] = averageStrength;
+                    lastArray[6] = pullsObj;
+                    data.splice(i, 1);
+                }
+                console.log('lastArray', lastArray);
+                mergedData.push(lastArray);
+                lastArray = data[i];
+            }
+        }
+        $scope.dataForCloud[playerNumber] = mergedData;
+    };
+
+    $scope.undoProcessing = function (playerNumber) {
+        $scope.dataForCloud[playerNumber] = angular.copy($scope.playerArray[playerNumber]);
+    };
+
+    $scope.uploadError = function (e) {
+        /* DO SOMETHING WHEN ERROR IS THROWN */
+        console.log(e);
+    };
+
+    $scope.uploadToCloud = function (playerNumber) {
+
+        // CHECK: has pitcher been selected in dropdown?
+        if ($scope.playerNumberToIdMap[playerNumber] == '') {
+            notification.log('need to choose a pitcher');
+            return false;
+        }
+
+        var promises = [];
+        var dataArray = $scope.dataForCloud[playerNumber];
+
+        var pitcherId = [];
+        pitcherId.push($scope.playerNumberToIdMap[playerNumber]);
+
+        // CHECK: see if lines already saved
+        var getForPitcher = { pitcher: pitcherId };
+        Restangular.one('pitching_data').get(getForPitcher).then(function (result) {
+            result = result.plain();
+
+            var uploaded = 0;
+            var notUploaded = 0;
+            for (var i in dataArray) {
+                var doNotUpload = false;
+                for (var j in result) {
+                    if (result[j]['originalPullTimestamp'] && doNotUpload == false) {
+                        var tempDate = new Date(result[j]['originalPullTimestamp']);
+                        if (dataArray[i][1].getTime() == tempDate.getTime()) doNotUpload = true;
+                    }
+                }
+                if (doNotUpload) {
+                    notUploaded++;
+                } else {
+                    uploaded++;
+                    var data = {
+                        mainValue: parseFloat(dataArray[i][3]).toString(),
+                        originalPullTimestamp: dataArray[i][1],
+                        pitcher: pitcherId,
+                        pulls: dataArray[i][5]
+                    };
+                    promises.push(Restangular.all('pitching_data').customPOST(data));
+                }
+            }
+            // notification.log(uploaded + ' were uploaded, ' + notUploaded + ' were not uploaded.');
+            $q.all(promises).then(function (result) {
+                // result contains array of all objects saved in Stamplay (as Restangular objects)
+                // to get just the data, on each result do:
+                //   var line = result[0].plain();
+                notification.log(uploaded + ' were uploaded, ' + notUploaded + ' were not uploaded.');
+            });
+        });
+    };
+};
+
+uploadExcelController.inject = ['$stateParams', 'notification', '$scope', '$rootScope', 'Restangular', '$timeout', '$q'];
+
+exports.default = uploadExcelController;
+
+},{}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+var uploadExcelTemplate = "<!--  ROW  -->\n<div class=\"row\">\n\t<div class=\"col-lg-12\">\n    \t<ma-view-actions><ma-back-button></ma-back-button></ma-view-actions>\n    \t<div class=\"page-header\">\n        \t<h1>Data in Excel</h1>\n    \t</div>\n\t</div>\n</div>\n\n<!--  ROW  -->\n<div class=\"row\" style=\"margin-bottom: 20px;\">\n\t<div class=\"col-md-5\">\n\t\t<span style=\"font-weight: 700;\">1. Choose Team</span>\n\t\t<br/>\n\t\t<select \n\t\t\tng-model=\"teamChoice\"\n\t\t\tname=\"teamList\"\n\t\t\tng-change=\"updatePlayerList()\"\n\t\t\tng-options=\"option.name for option in $root.teamsList track by option.id\"\n\t\t>\n\t\t</select>\n\t</div>\n    <div class=\"col-md-6\">\n    \t<span style=\"font-weight: 700;\">2. Upload Worksheet </span>\n    \t<js-xls onread=\"uploadRead\" onerror=\"uploadError\"></js-xls>\n    </div>\n</div>\n\n<!--  ROW  -->\n<div class=\"row\">\n    <div class=\"col-lg-12\">\n    \t<h4>Data for upload to cloud</h4>\n    \t<ul class=\"nav nav-pills\">\n\t\t  <li ng-repeat=\"(playerNumber,playerData) in playerArray\" ng-class=\"{active: playerNumber == playerChoice}\">\n\t\t  \t<a ng-click=\"choosePlayer(playerNumber)\" style=\"background-color:#1A6199;\">Player {{playerNumber}}</a>\n\t\t  </li>\n\t\t</ul>\n\t\t<div class=\"tab-content\" style=\"margin-top: 20px;overflow:auto;\">\n\t\t\t<div ng-if=\"!playerArray\">NO DATA FOUND YET</div>\n\t\t  \t<div ng-repeat=\"(number,playerData) in playerArray\" id=\"player{{playerNumber}}\" ng-show=\"playerChoice == number\">\n\t\t\t\t<div class=\"col-lg-6\">\n\t\t\t\t\t<h4>Raw data from Excel worksheet</h4>\n\t\t\t    \t<table class=\"table table-striped table-bordered\">\n\t\t\t    \t\t<thead>\n\t\t\t    \t\t\t<tr>\n\t\t\t    \t\t\t\t<th>Player</th>\n\t\t\t    \t\t\t\t<th>Date Pulled</th>\n\t\t\t    \t\t\t\t<th>Strength</th>\n\t\t\t    \t\t\t</tr>\n\t\t\t    \t\t</thead>\n\t\t\t    \t\t<tbody>\n\t\t\t    \t\t\t<tr ng-repeat=\"(key,row) in playerData\">\n\t\t\t    \t\t\t\t<td>{{row[0]}}</td>\n\t\t\t    \t\t\t\t<td>{{row[2] | date:'medium'}}</td>\n\t\t\t    \t\t\t\t<td>{{row[3]}} lbs.</td>\n\t\t\t    \t\t\t</tr>\n\t\t\t    \t\t\t<tr ng-if=\"matrix.length == 0\">\n\t\t\t    \t\t\t\t<td colspan=\"3\">No Data Available Yet</td>\n\t\t\t    \t\t\t</tr>\n\t\t\t    \t\t</tbody>\n\t\t\t    \t</table>\n\t\t\t    </div>\n\t\t    \t<div class=\"col-lg-6\">\n\t\t\t    \t<h4>Processed data for upload</h4>\n\t\t\t    \tChoose pitcher: <select \n\t\t\t\t\t\tng-model=\"$root.currPlayerSelected[number]\"\n\t\t\t\t\t\tname=\"teamList{{number}}\"\n\t\t\t\t\t\tng-change=\"updatePlayerForData(number,this)\"\n\t\t\t\t\t\tng-options=\"option.name for option in currPlayersList track by option.id\"\n\t\t\t\t\t\tstyle=\"\" \n\t\t\t\t\t></select>\n\t\t\t\t\t<a class=\"btn btn-default btn-sm pull-right\" ng-click=\"mergeLines(number)\" role=\"button\">Merge</a>\n\t\t\t\t\t<a class=\"btn btn-default btn-sm pull-right\" ng-click=\"undoProcessing(number)\" role=\"button\" style=\"margin-right:5px;\">Undo</a>\n\t\t\t\t  \t<table class=\"table table-striped table-bordered\" style=\"margin-top:10px;\">\n\t\t\t    \t\t<thead>\n\t\t\t    \t\t\t<tr>\n\t\t\t    \t\t\t\t<th>Date Pulled</th>\n\t\t\t    \t\t\t\t<th>Strength</th>\n\t\t\t    \t\t\t\t<th>Pulls</th>\n\t\t\t    \t\t\t\t<th>Actions</th>\n\t\t\t    \t\t\t</tr>\n\t\t\t    \t\t</thead>\n\t\t\t    \t\t<tbody>\n\t\t\t    \t\t\t<tr ng-if=\"matrix.length > 0\" ng-repeat=\"(rowKey,row) in dataForCloud[number]\">\n\t\t\t    \t\t\t\t<td>{{row[2] | date:'medium'}}</td>\n\t\t\t    \t\t\t\t<td>{{row[3]}} lbs.</td>\n\t\t\t    \t\t\t\t<td>{{row[5]}}</td>\n\t\t\t    \t\t\t\t<td><button ng-click=\"deleteLine(number,row,rowKey)\"><i class=\"fa fa-trash-o\"></i></button></td>\n\t\t\t    \t\t\t</tr>\n\t\t\t    \t\t\t<tr ng-if=\"matrix.length == 0\">\n\t\t\t    \t\t\t\t<td colspan=\"3\">No Data Available Yet</td>\n\t\t\t    \t\t\t</tr>\n\t\t\t    \t\t</tbody>\n\t\t    \t\t</table>\n\t\t    \t\t<a class=\"btn btn-default btn-sm\" ng-click=\"uploadToCloud(number)\" role=\"button\">Upload</a>\n\t\t\t\t</div><!-- end .col-lg-6 -->\n\t\t\t</div><!-- end ng-repeat -->\n\t\t</div><!-- end .tab-content -->\n    </div><!-- end .col-lg-12 -->\n</div><!-- end .row -->";
+
+exports.default = uploadExcelTemplate;
+
+},{}],17:[function(require,module,exports){
+'use strict';
+
+var _controller = require('./custom/pages/upload-excel/controller');
+
+var _controller2 = _interopRequireDefault(_controller);
+
+var _template = require('./custom/pages/upload-excel/template');
+
+var _template2 = _interopRequireDefault(_template);
+
+var _controller3 = require('./custom/pages/global-chart/controller');
+
+var _controller4 = _interopRequireDefault(_controller3);
+
+var _template3 = require('./custom/pages/global-chart/template');
+
+var _template4 = _interopRequireDefault(_template3);
 
 var _config = require('./custom/customFields/changeUserRole/config');
 
@@ -690,6 +1296,18 @@ var _directive3 = require('./custom/customFields/stamplay_email_field/directive'
 
 var _directive4 = _interopRequireDefault(_directive3);
 
+var _directive5 = require('./custom/customFields/UploadExcel/directive');
+
+var _directive6 = _interopRequireDefault(_directive5);
+
+var _directive7 = require('./custom/customFields/pitcher_chart/directive');
+
+var _directive8 = _interopRequireDefault(_directive7);
+
+var _directiveButton = require('./custom/pages/global-chart/directive-button');
+
+var _directiveButton2 = _interopRequireDefault(_directiveButton);
+
 var _Field = require('admin-config/lib/Field/Field');
 
 var _Field2 = _interopRequireDefault(_Field);
@@ -700,7 +1318,22 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * INITIALIZE THE APPLICATION
  ***************************************/
 
-var myApp = angular.module('myApp', ['ng-admin']);
+var myApp = angular.module('myApp', ['ng-admin', 'angular-js-xlsx']);
+
+myApp.factory('sampleService', ['$rootScope', 'Restangular', function ($rootScope, Restangular) {
+
+    return {
+        test: function test() {
+            Restangular.one('teams').get().then(function (result) {
+                console.log('result', result);
+                var temp = result.plain();
+                $rootScope.teamsList = temp;
+            }).catch(function (error) {
+                return false;
+            });
+        }
+    };
+}]);
 
 /***************************************
  * API AUTHENTICATION
@@ -736,6 +1369,33 @@ myApp.controller('username', ['$scope', '$window', function ($scope, $window) {
  * ----
  * http://ng-admin-book.marmelab.com/doc/Custom-pages.html
  ***************************************/
+
+myApp.config(function ($stateProvider) {
+    $stateProvider.state('upload-excel', {
+        parent: 'ng-admin',
+        url: '/upload-excel/',
+        params: { teamId: null },
+        controller: _controller2.default,
+        controllerAs: 'upload',
+        template: _template2.default,
+        resolve: {
+            getTeams: ['$rootScope', function () {
+                // console.log('$rootScope',$rootScope);
+            }]
+        }
+    });
+});
+
+myApp.config(function ($stateProvider) {
+    $stateProvider.state('global-chart', {
+        parent: 'ng-admin',
+        url: '/global-chart/',
+        params: {},
+        controller: _controller4.default,
+        controllerAs: 'globalchart',
+        template: _template4.default
+    });
+});
 
 /***************************************
  * CUSTOMIZING NG-ADMIN DIRECTIVES
@@ -783,6 +1443,15 @@ myApp.controller('username', ['$scope', '$window', function ($scope, $window) {
 // stamplay email field
 
 
+// upload Excel directive
+
+
+// pitcher chart (Chartist)
+
+
+// global chart
+
+
 // REGISTER THE CUSTOM FIELDS   
 myApp.config(['NgAdminConfigurationProvider', function (nga) {
     nga.registerFieldType('change_role_dropdown', _config2.default);
@@ -795,6 +1464,9 @@ myApp.config(['FieldViewConfigurationProvider', function (fvp) {
 
 myApp.directive('changeUserRole', _directive2.default);
 myApp.directive('stamplayEmailField', _directive4.default);
+myApp.directive('uploadExcelButton', _directive6.default);
+myApp.directive('pitcherChart', _directive8.default);
+myApp.directive('globalChartButton', _directiveButton2.default);
 
 /***************************************
  * DEFINE DATA ENTITIES
@@ -844,6 +1516,10 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     var createIssue = require('./models/issues');
     var issues = nga.entity('issues');
 
+    // pitcher injuries
+    var createInjuries = require('./models/injuries');
+    var injuries = nga.entity('injuries');
+
     // ADD TO ADMIN OBJECT
     admin.addEntity(createRole(nga, roles));
     admin.addEntity(createUser(nga, userEntity, roles, teams));
@@ -851,20 +1527,20 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     admin.addEntity(createTeamMembers(nga, team_members, teams, userEntity));
     admin.addEntity(createPitchers(nga, pitchers, teams, userEntity));
     admin.addEntity(createPitcherWorkload(nga, pitcher_workload, pitchers, userEntity));
-    // admin.addEntity(createPitchingData(nga,pitching_data,pitchers,userEntity));
     admin.addEntity(createPitchingData(nga, pitching_data, pitchers, pitcher_workload, userEntity));
     admin.addEntity(createIssue(nga, issues, userEntity));
+    admin.addEntity(createInjuries(nga, injuries, pitchers, userEntity));
 
     /***************************************
      * CUSTOM MENU
      ***************************************/
 
-    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Team Info</a>')).addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Pitcher Info</a>')).addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>')).addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;')));
+    admin.menu(nga.menu().addChild(nga.menu().title('Dashboard').icon('<span class="glyphicon glyphicon-calendar"></span>&nbsp;').link('/dashboard')).addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Team Info</a>')).addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Pitcher Info</a>')).addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;')).addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;')).addChild(nga.menu(nga.entity('injuries')).title('Pitcher Injuries').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;')).addChild(nga.menu().template('<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>')).addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;')));
 
     /***************************************
      * CUSTOM HEADER
      ***************************************/
-    var customHeaderTemplate = '<div class="navbar-header">' + '<button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '<span class="icon-bar"></span>' + '</button>' + '<a class="navbar-brand" href="#" ng-click="appController.displayHome()">Shoulder Saver</a>' + '</div>' + '<ul class="nav navbar-top-links navbar-right hidden-xs">' + '<li class="dropdown">' + '<a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">' + '<i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>' + '</a>' + '<ul class="dropdown-menu dropdown-user" role="menu">' + '<li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>' + '</ul>' + '</li>' + '</ul>';
+    var customHeaderTemplate = '\n    <div class="navbar-header">\n        <button type="button" class="navbar-toggle" ng-click="isCollapsed = !isCollapsed">\n          <span class="icon-bar"></span>\n          <span class="icon-bar"></span>\n          <span class="icon-bar"></span>\n        </button>\n        <a class="navbar-brand" href="#" ng-click="appController.displayHome()" style="margin-right:10px;">Shoulder Saver</a>\n    </div>\n    <upload-excel-button entry="entry" style="display: inline-block;margin-top: 8px;"></upload-excel-button>\n    <global-chart-button entry="entry" style="display: inline-block;margin-top: 8px;"></global-chart-button>\n    <ul class="nav navbar-top-links navbar-right hidden-xs">\n        <li class="dropdown">\n            <a class="dropdown-toggle username" data-toggle="dropdown" ng-controller="username">\n                <i class="glyphicon glyphicon-user"></i>&nbsp;{{username}}&nbsp;<i class="fa fa-caret-down"></i>\n            </a>\n            <ul class="dropdown-menu dropdown-user" role="menu">\n                <li><a href="#" onclick="logout()"><i class="glyphicon glyphicon-log-out"></i> Logout</a></li>\n            </ul>\n        </li>\n    </ul>';
 
     admin.header(customHeaderTemplate);
 
@@ -888,7 +1564,30 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     nga.configure(admin);
 }]);
 
-},{"./custom/customFields/changeUserRole/config":1,"./custom/customFields/changeUserRole/directive":2,"./custom/customFields/changeUserRole/view":3,"./custom/customFields/stamplay_email_field/config":4,"./custom/customFields/stamplay_email_field/directive":5,"./custom/customFields/stamplay_email_field/view":6,"./custom/errorHandlers/admin":7,"./custom/errorHandlers/appLevel":8,"./custom/interceptors/stamplay":9,"./models/issues":11,"./models/pitcher_workload":12,"./models/pitchers":13,"./models/pitching_data":14,"./models/role":15,"./models/team_members":16,"./models/teams":17,"./models/users":18,"admin-config/lib/Field/Field":19}],11:[function(require,module,exports){
+},{"./custom/customFields/UploadExcel/directive":1,"./custom/customFields/changeUserRole/config":2,"./custom/customFields/changeUserRole/directive":3,"./custom/customFields/changeUserRole/view":4,"./custom/customFields/pitcher_chart/directive":5,"./custom/customFields/stamplay_email_field/config":6,"./custom/customFields/stamplay_email_field/directive":7,"./custom/customFields/stamplay_email_field/view":8,"./custom/errorHandlers/admin":9,"./custom/errorHandlers/appLevel":10,"./custom/interceptors/stamplay":11,"./custom/pages/global-chart/controller":12,"./custom/pages/global-chart/directive-button":13,"./custom/pages/global-chart/template":14,"./custom/pages/upload-excel/controller":15,"./custom/pages/upload-excel/template":16,"./models/injuries":18,"./models/issues":19,"./models/pitcher_workload":20,"./models/pitchers":21,"./models/pitching_data":22,"./models/role":23,"./models/team_members":24,"./models/teams":25,"./models/users":26,"admin-config/lib/Field/Field":27}],18:[function(require,module,exports){
+'use strict';
+
+module.exports = function (nga, injuries, pitchers, user) {
+
+	// LIST VIEW
+	injuries.listView().title('Pitcher Injuries').fields([nga.field('date_of_injury', 'date').label('Date').format('short'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name'))]).listActions(['show', 'delete', 'edit']).filters([nga.field('email').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+
+	// SHOW VIEW
+	injuries.showView().title('Pitcher Injury').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('date_of_injury').label('Date of Injury'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name')), nga.field('note', 'wysiwyg').label('Note')]);
+
+	// CREATION VIEW
+	injuries.creationView().title('Pitcher Injury').fields([nga.field('date_of_injury', 'date').label('Date of Injury'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name')).sortField('name').sortDir('ASC'), nga.field('note', 'wysiwyg').label('Note')]);
+
+	// DELETION VIEW
+	injuries.deletionView().title('Delete Injury');
+
+	// EDITION VIEW
+	injuries.editionView().title('Edit Injury').fields(nga.field('date_of_injury', 'date').label('Date of Injury'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('name')), nga.field('note', 'wysiwyg').label('Note'));
+
+	return injuries;
+};
+
+},{}],19:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, issues, user) {
@@ -905,7 +1604,7 @@ module.exports = function (nga, issues, user) {
 	return issues;
 };
 
-},{}],12:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitcher_workload, pitchers, user) {
@@ -928,69 +1627,43 @@ module.exports = function (nga, pitcher_workload, pitchers, user) {
 	return pitcher_workload;
 };
 
-},{}],13:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitchers, teams, user) {
 
+	var listViewActionsTemplate = '<upload-excel-button entry="entry"></upload-excel-button>' + '<ma-export-to-csv-button entity="::entity" datastore="::datastore"></ma-export-to-csv-button>' + '<ma-create-button entity-name="pitchers" size="md" label="Create" default-values="{ post_id: entry.values.id }"></ma-create-button>';
+
 	// LIST VIEW
-	pitchers.listView().title('All Pitchers').fields([nga.field('unique_id').label('Pitcher'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	pitchers.listView().title('All Pitchers').fields([nga.field('unique_id').label('Pitcher'), nga.field('name'), nga.field('jersey_number'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('unique_id').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	//.actions(listViewActionsTemplate)
 
 	// SHOW VIEW
 	pitchers.showView().title('"{{ entry.values.unique_id }}"').fields([
 	// nga.field('id'),
-	nga.field('unique_id').label('Unique ID'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'),
-	// nga.field('name'),
-	nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('baselines', 'json')]);
+	nga.field('unique_id').label('Unique ID'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name'), nga.field('jersey_number'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')), nga.field('baselines', 'json'), nga.field('chart', 'template').template('<pitcher-chart></pitcher-chart>')]);
 
 	// CREATION VIEW
-	//  pitchers.creationView()
-	//  	.title('Add Pitcher')
-	//  	.fields([
-	//  		nga.field('name'),
-	//  		nga.field('age'),
-	// 	nga.field('height').label('Height (inches)'),
-	// 	nga.field('weight').label('Weight (lbs)'),
-	// 	nga.field('stride_length').label('Stride Length (inches)'),
-	// 	nga.field('device_height').label('Device Height (inches)'),
-	// 	nga.field('team', 'reference')
-	// 		.label('Team')
-	//        .targetEntity(teams)
-	//        .targetField(nga.field('name'))
-	//        .sortField('name')
-	//        .sortDir('ASC')
-	// ])
-	// .onSubmitSuccess(['entry','entity','$http','$state', function(entry,entity,$http,$state){
-	// 	function s4() {
-	// 			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-	// 		}
-	// 	function guid() {
-	// 			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-	// 	}
-	// 	var uuid = guid();
-	// 	var pitcherID = entry._identifierValue;
-	// 		console.log('unique_id', uuid);
-	// 		console.log('pitcherID', pitcherID);
-	// 		$http.put('https://pitchingdata.stamplayapp.com/api/cobject/v1/pitchers/' + pitcherID, { unique_id:uuid })
-	// 			.then(function(response){
-	// 				$state.go($state.get('show'), { entity: entity.name(), id: response.data._id });
-	// 			});
+	pitchers.creationView().title('Add Pitcher').fields([nga.field('name'), nga.field('jersey_number'), nga.field('age'), nga.field('birth_date', 'date'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)'), nga.field('team', 'reference').label('Team').targetEntity(teams).targetField(nga.field('name')).sortField('name').sortDir('ASC')]).onSubmitSuccess(['entry', 'entity', '$http', '$state', function (entry, entity, $http, $state) {
+		function s4() {
+			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+		}
+		function guid() {
+			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+		}
+		var uuid = guid();
+		var pitcherID = entry._identifierValue;
+		console.log('unique_id', uuid);
+		console.log('pitcherID', pitcherID);
+		$http.put('https://pitchingdata.stamplayapp.com/api/cobject/v1/pitchers/' + pitcherID, { unique_id: uuid }).then(function (response) {
+			$state.go($state.get('show'), { entity: entity.name(), id: response.data._id });
+		});
 
-	// 		return false;
-	// }])
-
+		return false;
+	}]);
 
 	// EDITION VIEW
-	//  pitchers.editionView()
-	//  .title('Edit "{{ entry.values.unique_id }}"')
-	//  .fields([
-	//  		nga.field('name'),
-	//  		nga.field('age'),
-	// 	nga.field('height').label('Height (inches)'),
-	// 	nga.field('weight').label('Weight (lbs)'),
-	// 	nga.field('stride_length').label('Stride Length (inches)'),
-	// 	nga.field('device_height').label('Device Height (inches)')
-	// ])
+	pitchers.editionView().title('Edit "{{ entry.values.unique_id }}"').fields([nga.field('name'), nga.field('jersey_number'), nga.field('age'), nga.field('height').label('Height (inches)'), nga.field('weight').label('Weight (lbs)'), nga.field('stride_length').label('Stride Length (inches)'), nga.field('device_height').label('Device Height (inches)')]);
 
 	// DELETION VIEW
 	pitchers.deletionView().title('Delete "{{ entry.values.unique_id }}"');
@@ -998,16 +1671,19 @@ module.exports = function (nga, pitchers, teams, user) {
 	return pitchers;
 };
 
-},{}],14:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, pitching_data, pitchers, pitcher_workload, user) {
 
+	var listViewActionsTemplate = '<upload-excel-button entry="entry"></upload-excel-button>' + '<ma-export-to-csv-button entity="::entity" datastore="::datastore"></ma-export-to-csv-button>';
+
 	// LIST VIEW
 	pitching_data.listView().title('All Pitching Data').fields([nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).listActions(['show', 'delete']).filters([nga.field('unique_id')]);
+	//.actions(listViewActionsTemplate)
 
 	// SHOW VIEW
-	pitching_data.showView().title('Pitching Data').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('pulls', 'json'), nga.field('note', 'wysiwyg')]);
+	pitching_data.showView().title('Pitching Data').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('originalPullTimestamp', 'date').label('Original Creation').format('short'), nga.field('pitcher', 'reference').label('Pitcher').targetEntity(pitchers).targetField(nga.field('unique_id')), nga.field('mainValue'), nga.field('note', 'wysiwyg')]);
 
 	// DELETION VIEW
 	pitching_data.deletionView().title('Delete Pitching Data');
@@ -1015,7 +1691,7 @@ module.exports = function (nga, pitching_data, pitchers, pitcher_workload, user)
 	return pitching_data;
 };
 
-},{}],15:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, role) {
@@ -1029,7 +1705,7 @@ module.exports = function (nga, role) {
     return role;
 };
 
-},{}],16:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, team_members, teams, user) {
@@ -1052,13 +1728,16 @@ module.exports = function (nga, team_members, teams, user) {
 	return team_members;
 };
 
-},{}],17:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, teams, user) {
 
+	var listViewActionsTemplate = '<upload-excel-button entry="entry"></upload-excel-button>' + '<ma-export-to-csv-button entity="::entity" datastore="::datastore"></ma-export-to-csv-button>' + '<ma-create-button entity-name="teams" size="md" label="Create" default-values="{ post_id: entry.values.id }"></ma-create-button>';
+
 	// LIST VIEW
 	teams.listView().title('All Teams').fields([nga.field('name').label('Team Name'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short')]).sortField('name').sortDir('ASC').listActions(['show', 'edit', 'delete']).filters([nga.field('name').label('Team Name').pinned(true).template('<div class="input-group"><input type="text" ng-model="value" placeholder="Search" class="form-control"></input><span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span></div>')]);
+	//.actions(listViewActionsTemplate)
 
 	// SHOW VIEW
 	teams.showView().title('"{{ entry.values.name }}" Team').fields([nga.field('id'), nga.field('dt_create', 'date').label('Created').format('short'), nga.field('dt_update', 'date').label('Updated').format('short'), nga.field('name'), nga.field('note', 'wysiwyg')]);
@@ -1075,7 +1754,7 @@ module.exports = function (nga, teams, user) {
 	return teams;
 };
 
-},{}],18:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, users, roles, teams) {
@@ -1101,7 +1780,7 @@ module.exports = function (nga, users, roles, teams) {
     return users;
 };
 
-},{}],19:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1401,7 +2080,7 @@ var Field = (function () {
 exports["default"] = Field;
 module.exports = exports["default"];
 
-},{"../Utils/stringUtils":22}],20:[function(require,module,exports){
+},{"../Utils/stringUtils":30}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1451,7 +2130,7 @@ var FileField = (function (_Field) {
 exports["default"] = FileField;
 module.exports = exports["default"];
 
-},{"./Field":19}],21:[function(require,module,exports){
+},{"./Field":27}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1486,7 +2165,7 @@ var TextField = (function (_Field) {
 exports["default"] = TextField;
 module.exports = exports["default"];
 
-},{"./Field":19}],22:[function(require,module,exports){
+},{"./Field":27}],30:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1512,7 +2191,7 @@ exports['default'] = {
 };
 module.exports = exports['default'];
 
-},{}],23:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /**
  * humane.js
  * Humanized Messages for Notifications
@@ -1752,4 +2431,4 @@ module.exports = exports['default'];
    return new Humane()
 });
 
-},{}]},{},[10]);
+},{}]},{},[17]);
