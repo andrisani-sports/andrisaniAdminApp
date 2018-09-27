@@ -19,11 +19,11 @@ module.exports = function(nga,issues,user) {
   issues.showView()
 	  .title('App Issue')
 	  .fields([
-	      nga.field('id'),
-				nga.field('dt_create', 'date').label('Created').format('short'),
-				nga.field('dt_update', 'date').label('Updated').format('short'),
-				nga.field('name')
-					.label('User'),
+		nga.field('id'),
+		nga.field('dt_create', 'date').label('Created').format('short'),
+		nga.field('dt_update', 'date').label('Updated').format('short'),
+		nga.field('name')
+			.label('User'),
         nga.field('email')
         	.label('User Email'),
         nga.field('message')

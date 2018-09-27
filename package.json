@@ -4,7 +4,8 @@
   "description": "Admin for pitcher diagnostic device",
   "author": "Matt Eckman, Steve Roettger",
   "scripts": {
-    "build": "webpack ./main.js ./build/bundle.js"
+    "build": "webpack ./main.js ./build/bundle.js",
+    "rundev": "http-server"
   },
   "main": "main.js",
   "repository": {

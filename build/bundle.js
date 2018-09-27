@@ -1,4 +1,19 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+"use strict";
+
+module.exports = function (myApp) {
+
+	myApp.config(function (RestangularProvider) {
+
+		RestangularProvider.setDefaultHeaders({
+			"Content-Type": 'application/json',
+			"x-apikey": "5bac2705bd79880aab0a778e",
+			'cache-control': 'no-cache'
+		});
+	});
+};
+
+},{}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -25,7 +40,7 @@ uploadExcelButtonDirective.$inject = ['$location', '$rootScope', '$state'];
 
 exports.default = uploadExcelButtonDirective;
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -61,7 +76,7 @@ var ChangeRoleField = function (_FileField) {
 
 exports.default = ChangeRoleField;
 
-},{"admin-config/lib/Field/FileField":28}],3:[function(require,module,exports){
+},{"admin-config/lib/Field/FileField":28}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -148,7 +163,7 @@ changeRoleField.$inject = ['Restangular'];
 
 exports.default = changeRoleField;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -169,7 +184,7 @@ exports.default = {
     }
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -285,7 +300,7 @@ pitcherChartDirective.inject = ['Restangular'];
 
 exports.default = pitcherChartDirective;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -336,7 +351,7 @@ var StamplayEmailFieldConfig = function (_TextField) {
 
 exports.default = StamplayEmailFieldConfig;
 
-},{"admin-config/lib/Field/TextField":29}],7:[function(require,module,exports){
+},{"admin-config/lib/Field/TextField":29}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -364,7 +379,7 @@ stamplayEmailFieldDirective.$inject = [];
 
 exports.default = stamplayEmailFieldDirective;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -389,7 +404,7 @@ exports.default = {
    }
 };
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 module.exports = function (admin) {
@@ -456,7 +471,7 @@ module.exports = function (admin) {
     return admin;
 };
 
-},{"humane-js":31}],10:[function(require,module,exports){
+},{"humane-js":31}],11:[function(require,module,exports){
 'use strict';
 
 module.exports = function (myApp) {
@@ -515,294 +530,6 @@ module.exports = function (myApp) {
 		}]);
 
 		return myApp;
-};
-
-},{}],11:[function(require,module,exports){
-'use strict';
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-module.exports = function (myApp) {
-
-	/*******************************************
-  * request RESTANGULAR INTERCEPTOR FUNCTIONS
-  *******************************************/
-
-	myApp.config(function (RestangularProvider, $httpProvider) {
-
-		RestangularProvider.addFullRequestInterceptor(function (element, operation, what, url, headers, params, httpConfig) {
-
-			// console.log('url',angular.copy(url));
-			// console.log('element: ',element);
-			// console.log('operation: ',operation);
-			// console.log('what: ',what);
-			// console.log('headers: ',headers);
-			// console.log('params: ',params);
-			// console.log('httpConfig',httpConfig);
-
-			/*
-    * FIX ISSUES FOR STAMPLAY API
-    */
-
-			if (operation == 'getList') {
-				// FIX PAGINATION
-				// STAMPLAY CANONICAL URL IS:
-				// https://bkschool.stamplayapp.com/api/cobject/v1/audio
-				// ? n=10 & sort=audio_url & page=1 & per_page=10
-
-				if (!params.page) {
-					params.page = params._page;
-				}
-				if (!params.per_page) {
-					params.per_page = params._perPage;
-				}
-				if (params._sortField) {
-					params.sort = '';
-					if (params._sortDir == 'DESC') params.sort = '-';
-					params.sort += params._sortField;
-				}
-				delete params._page;
-				delete params._perPage;
-				delete params._sortField;
-				delete params._sortDir;
-			}
-
-			//console.log('params post Stamplay processing:',params);
-
-			return { element: element, params: params };
-		});
-
-		/***************************************
-   * request POST-RESTANGULAR INTERCEPTOR FUNCTIONS
-   ***************************************/
-
-		// USING 'unshift' TO RUN THESE FUNCTIONS FIRST (after the Restangular interceptor)!!!!
-		$httpProvider.interceptors.unshift(addContentTypeToHeader);
-
-		// these functions run in regular order (after Restangular interceptors)
-		$httpProvider.interceptors.push(fixStamplayIssues);
-
-		/*
-   * FIX ISSUES FOR STAMPLAY API
-   */
-
-		// Angular removes the header 'Content-Type' if request is GET.
-		// This function is a hack to add the header back in, because Stamplay 
-		// requires the header.
-		function addContentTypeToHeader() {
-			return {
-				request: requestInterceptor
-			};
-
-			function requestInterceptor(config) {
-				if (angular.isDefined(config.headers['Content-Type']) && !angular.isDefined(config.data)) config.data = '';
-
-				return config;
-			}
-		}
-
-		function fixStamplayIssues($q) {
-			return {
-				request: function request(config) {
-
-					config = angular.copy(config);
-					if (config.method == 'POST') {
-						for (var i in config.data) {
-							if (config.data[i] === null) {
-								// config.data[i] = '';
-								delete config.data[i];
-							}
-						}
-						if (config && config.data && config.data.zones_arr) {
-							var zones = config.data.zones_arr;
-							for (var i in zones) {
-								if (_typeof(zones[i]) == 'object') {
-									zones[i] = JSON.stringify(zones[i]);
-								}
-							}
-						}
-					}
-
-					// When NG-Admin does a list GET, it receives all fields for 
-					// that data model, and those fields persist in the dataStore, 
-					// even if the editionView only defines a couple of fields. 
-					// Which means that the un-editable fields in Stamplay must be 
-					// removed before doing a PUT
-					if (config.method === 'PUT') {
-
-						if (config.data) {
-							for (var i in config.data) {
-								if (config.data[i] === null) {
-									// this is a temporary fix, need to 
-									// make it more stable
-									if (i == 'featureVideo') config.data[i] = [];else config.data[i] = '';
-								}
-								if (typeof config.data[i] == 'undefined') {
-									delete config.data[i];
-								}
-							}
-						}
-
-						// zones_arr is an array of strings in Stamplay, needs
-						// processing
-						if (config.data && config.data.zones_arr) {
-							var zones = config.data.zones_arr;
-							for (var i in zones) {
-								if (_typeof(zones[i]) == 'object') {
-									zones[i] = JSON.stringify(zones[i]);
-								}
-							}
-						}
-
-						// if this is for a file upload
-						if (config.file) {
-							// PLACEHOLDER FOR FUTURE CODE
-						} else {
-							delete config.data.__v;
-							delete config.data._id;
-							delete config.data.appId;
-							delete config.data.cobjectId;
-							delete config.data.dt_create;
-							delete config.data.dt_update;
-							delete config.data.id;
-							delete config.data.actions;
-						}
-					}
-
-					// translate NGAdmin filter(s) to Stamplay format
-					if (config.method == 'GET' && config.params) {
-						var where = {};
-
-						// hack to fix an NGA problem: when using 'referenced_list', 
-						// [object Object] appears in url
-						if (config.params._filters && '[object Object]' in config.params._filters) {
-							var temp = config.params._filters['[object Object]'];
-							delete config.params._filters['[object Object]'];
-							where.chatRoomId = temp; // Stamplay uses a straight key:value pair in GET
-						}
-
-						if (config.params._filters) {
-							var obj = config.params._filters;
-							for (var key in obj) {
-								// for Stamplay, need to wrap a mongoId in 
-								if (obj[key]) {
-									var value = obj[key];
-									var mongoId = value.search(/^(?=[a-f\d]{24}$)(\d+[a-f]|[a-f]+\d)/i) > -1 ? true : false;
-
-									if (key == 'dt_create' || key == 'dt_modify') {
-
-										where[key] = { "$gte": obj[key] }; // TODO make this work
-										//where[key] = new Date(obj[key]); 
-									} else if (mongoId) {
-										// 'referenced_list' sends the foreign key in config.params._filters
-										// but it should be in config.params for Stamplay
-										// where[key] = {"$regex": "[" + obj[key] + "]", "$options": 'i'};
-										// config.params[key] = value;
-										config.params['populate'] = 'true';
-									} else {
-
-										if (obj[key] != '') {
-											where[key] = { "$regex": obj[key], "$options": 'i' };
-										}
-									}
-								}
-
-								delete config.params._filters[key];
-							}
-						}
-
-						// if all the previous fixes have emptied the NGA filter object, 
-						// then delete it
-						if (isEmpty(config.params._filters)) {
-							delete config.params._filters;
-						}
-
-						// if there are where queries, add to parameters
-						if (!angular.equals(where, {})) {
-							config.params.where = where;
-						}
-					}
-
-					// // TRYING TO GET REFERENCES TO WORK IN SITUATIONS MODEL
-					// // the code below makes a reference field (page in situations) to 
-					// // have [Object object] instead of the record id
-					// if(config.method == 'GET' && config.params)
-					// 	config.params.populate = 'true';
-					// else if(config.method == 'GET' && !config.params){
-					// 	config.params = {populate: 'true'};
-					// }
-
-					return config || $q.when(config);
-				}
-			};
-		}
-
-		// from http://stackoverflow.com/questions/4994201/is-object-empty
-		// Speed up calls to hasOwnProperty
-		var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-		function isEmpty(obj) {
-
-			// null and undefined are "empty"
-			if (obj == null) return true;
-
-			// Assume if it has a length property with a non-zero value
-			// that that property is correct.
-			if (obj.length > 0) return false;
-			if (obj.length === 0) return true;
-
-			// If it isn't an object at this point
-			// it is empty, but it can't be anything *but* empty
-			// Is it empty?  Depends on your application.
-			if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== "object") return true;
-
-			// Otherwise, does it have any properties of its own?
-			// Note that this doesn't handle
-			// toString and valueOf enumeration bugs in IE < 9
-			for (var key in obj) {
-				if (hasOwnProperty.call(obj, key)) return false;
-			}
-
-			return true;
-		}
-
-		/********************************************
-   * response RESTANGULAR INTERCEPTOR FUNCTIONS
-   ********************************************/
-
-		RestangularProvider.addResponseInterceptor(function (data, operation, what, url, response, deferred) {
-
-			//console.log('in addResponseInterceptor');
-
-			var newResponse;
-			//console.log('Response',response);
-			//console.log(typeof response.data.data);
-			//console.log('Data',data);
-
-			// ADJUST STAMPLAY'S STRUCTURE TO MATCH WHAT NG-ADMIN EXPECTS
-			if ('data' in response.data) {
-				var newData = response.data.data;
-				if (newData.length > 0) {
-					newResponse = response.data.data;
-				} else {
-					newResponse = [];
-				}
-			} else {
-				newResponse = response.data;
-			}
-
-			// FIX PAGINATION
-			if (operation == "getList") {
-				var contentRange = data.pagination.total_elements;
-				//console.log('num of entries retrieved by Restangular',contentRange);
-				response.totalCount = contentRange;
-			}
-
-			//console.log('newResponse',newResponse);
-
-			return newResponse;
-		});
-	});
 };
 
 },{}],12:[function(require,module,exports){
@@ -1318,6 +1045,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * INITIALIZE THE APPLICATION
  ***************************************/
 
+console.log('starting...');
+
 var myApp = angular.module('myApp', ['ng-admin', 'angular-js-xlsx']);
 
 myApp.factory('sampleService', ['$rootScope', 'Restangular', function ($rootScope, Restangular) {
@@ -1339,13 +1068,13 @@ myApp.factory('sampleService', ['$rootScope', 'Restangular', function ($rootScop
  * API AUTHENTICATION
  ***************************************/
 
-// require('./custom/apis/stamplay/auth')(myApp);
+require('./custom/apis/restdb/auth')(myApp);
 
 /***************************************
  * INTERCEPTOR FUNCTIONS
  ***************************************/
 
-require('./custom/interceptors/stamplay')(myApp);
+// require('./custom/apis/restdb/restdb_interceptors')(myApp);
 
 /***************************************
  * ERROR HANDLERS
@@ -1478,19 +1207,19 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     // create the default admin application
     // ==================================================
 
-    var admin = nga.application('Andrisani Sports').baseApiUrl('https://pitchingdata.stamplayapp.com/api/cobject/v1/');
+    var admin = nga.application('Andrisani Sports').baseApiUrl('https://andrisani-7eb3.restdb.io/rest/');
 
     // ==================================================
-    // add entities
+    // add entities that correspond to database
     // ==================================================
 
-    // roles (https://pitchingdata.stamplayapp.com/api/user/v1/roles)
+    // roles
     var createRole = require('./models/role');
-    var roles = nga.entity('roles').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
+    var roles = nga.entity('roles').identifier(nga.field('_id'));
 
-    // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
+    // users
     var createUser = require('./models/users');
-    var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
+    var userEntity = nga.entity('users');
 
     // teams
     var createTeams = require('./models/teams');
@@ -1564,7 +1293,7 @@ myApp.config(['NgAdminConfigurationProvider', 'RestangularProvider', function (n
     nga.configure(admin);
 }]);
 
-},{"./custom/customFields/UploadExcel/directive":1,"./custom/customFields/changeUserRole/config":2,"./custom/customFields/changeUserRole/directive":3,"./custom/customFields/changeUserRole/view":4,"./custom/customFields/pitcher_chart/directive":5,"./custom/customFields/stamplay_email_field/config":6,"./custom/customFields/stamplay_email_field/directive":7,"./custom/customFields/stamplay_email_field/view":8,"./custom/errorHandlers/admin":9,"./custom/errorHandlers/appLevel":10,"./custom/interceptors/stamplay":11,"./custom/pages/global-chart/controller":12,"./custom/pages/global-chart/directive-button":13,"./custom/pages/global-chart/template":14,"./custom/pages/upload-excel/controller":15,"./custom/pages/upload-excel/template":16,"./models/injuries":18,"./models/issues":19,"./models/pitcher_workload":20,"./models/pitchers":21,"./models/pitching_data":22,"./models/role":23,"./models/team_members":24,"./models/teams":25,"./models/users":26,"admin-config/lib/Field/Field":27}],18:[function(require,module,exports){
+},{"./custom/apis/restdb/auth":1,"./custom/customFields/UploadExcel/directive":2,"./custom/customFields/changeUserRole/config":3,"./custom/customFields/changeUserRole/directive":4,"./custom/customFields/changeUserRole/view":5,"./custom/customFields/pitcher_chart/directive":6,"./custom/customFields/stamplay_email_field/config":7,"./custom/customFields/stamplay_email_field/directive":8,"./custom/customFields/stamplay_email_field/view":9,"./custom/errorHandlers/admin":10,"./custom/errorHandlers/appLevel":11,"./custom/pages/global-chart/controller":12,"./custom/pages/global-chart/directive-button":13,"./custom/pages/global-chart/template":14,"./custom/pages/upload-excel/controller":15,"./custom/pages/upload-excel/template":16,"./models/injuries":18,"./models/issues":19,"./models/pitcher_workload":20,"./models/pitchers":21,"./models/pitching_data":22,"./models/role":23,"./models/team_members":24,"./models/teams":25,"./models/users":26,"admin-config/lib/Field/Field":27}],18:[function(require,module,exports){
 'use strict';
 
 module.exports = function (nga, injuries, pitchers, user) {

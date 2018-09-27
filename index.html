@@ -40,14 +40,12 @@
           }
       }
       
-      
       // CHECK FOR LOGGED USER
       var currUrl = window.location.origin;
       var token = window.localStorage.getItem(currUrl + '-jwt');
-      //var token = window.localStorage.getItem("http://ngadmin-jwt");
       var user = window.localStorage.getItem('user');
       
-      if (!user || !token) {
+      if (!user || !token) { console.log('line 48');
           window.location.href = "./login.html";
       }
 

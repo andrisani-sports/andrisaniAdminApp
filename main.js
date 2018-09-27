@@ -2,7 +2,9 @@
  * INITIALIZE THE APPLICATION
  ***************************************/
 
-var myApp = angular.module('myApp', 
+ console.log('starting...');
+
+ var myApp = angular.module('myApp', 
     [ 'ng-admin', 'angular-js-xlsx' ]
 );
 
@@ -30,13 +32,13 @@ console.log('result',result);
  * API AUTHENTICATION
  ***************************************/
 
-// require('./custom/apis/stamplay/auth')(myApp);
+require('./custom/apis/restdb/auth')(myApp);
 
 /***************************************
  * INTERCEPTOR FUNCTIONS
  ***************************************/
 
-require('./custom/interceptors/stamplay')(myApp);
+// require('./custom/apis/restdb/restdb_interceptors')(myApp);
 
 /***************************************
  * ERROR HANDLERS
@@ -173,28 +175,29 @@ myApp.directive('globalChartButton',globalChartButtonDirective);
  ***************************************/
 
 import Field from 'admin-config/lib/Field/Field';
+
 myApp.config(['NgAdminConfigurationProvider','RestangularProvider', 
     function(nga,Restangular) {
 
     // ==================================================
     // create the default admin application
     // ==================================================
-    
+
     var admin = nga
         .application('Andrisani Sports')
-        .baseApiUrl('https://pitchingdata.stamplayapp.com/api/cobject/v1/');
+        .baseApiUrl('https://andrisani-7eb3.restdb.io/rest/');
  
     // ==================================================
-    // add entities
+    // add entities that correspond to database
     // ==================================================
 
-    // roles (https://pitchingdata.stamplayapp.com/api/user/v1/roles)
+    // roles
     var createRole = require('./models/role');
-    var roles = nga.entity('roles').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/').identifier(nga.field('_id'));
+    var roles = nga.entity('roles').identifier(nga.field('_id'));
     
-    // users (https://online-school-for-the-work.stamplayapp.com/api/user/v1/)
+    // users
     var createUser = require('./models/users');
-    var userEntity = nga.entity('users').baseApiUrl('https://pitchingdata.stamplayapp.com/api/user/v1/');
+    var userEntity = nga.entity('users');
 
     // teams
     var createTeams = require('./models/teams');

@@ -5,9 +5,9 @@ module.exports = function(nga,pitcher_workload,pitchers,user) {
 	  .title('All Pitcher Workload')
 	  .fields([
 	      nga.field('pitcher', 'reference')
-					.label('Pitcher')
-          .targetEntity(pitchers)
-          .targetField(nga.field('unique_id')),
+			.label('Pitcher')
+            .targetEntity(pitchers)
+             .targetField(nga.field('unique_id')),
 	      nga.field('game_date', 'date').label('Game Date').format('shortDate'),
 	      nga.field('dt_create', 'date').label('Created').format('short'),
 	      nga.field('dt_update', 'date').label('Updated').format('short'),
