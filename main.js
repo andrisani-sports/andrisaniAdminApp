@@ -2,31 +2,29 @@
  * INITIALIZE THE APPLICATION
  ***************************************/
 
- console.log('starting...');
-
  var myApp = angular.module('myApp', 
     [ 'ng-admin', 'angular-js-xlsx' ]
 );
 
-myApp.factory('sampleService', ['$rootScope','Restangular', 
-function($rootScope,Restangular) {
+// myApp.factory('sampleService', ['$rootScope','Restangular', 
+// function($rootScope,Restangular) {
 
-    return {
-        test: function(){
-            Restangular.one('teams')
-            .get()
-            .then(function(result){
-console.log('result',result);
-                var temp = result.plain();
-                $rootScope.teamsList = temp;
-            })
-            .catch(function(error){
-                return false;
-            });
-        }
-    }
+//     return {
+//         test: function(){
+//             Restangular.one('teams')
+//             .get()
+//             .then(function(result){
+// console.log('result',result);
+//                 var temp = result.plain();
+//                 $rootScope.teamsList = temp;
+//             })
+//             .catch(function(error){
+//                 return false;
+//             });
+//         }
+//     }
 
-}]);
+// }]);
 
 /***************************************
  * API AUTHENTICATION
@@ -38,7 +36,7 @@ require('./custom/apis/restdb/auth')(myApp);
  * INTERCEPTOR FUNCTIONS
  ***************************************/
 
-// require('./custom/apis/restdb/restdb_interceptors')(myApp);
+require('./custom/apis/restdb/restdb_interceptors')(myApp);
 
 /***************************************
  * ERROR HANDLERS
@@ -205,7 +203,7 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
 
     // team members
     var createTeamMembers = require('./models/team_members');
-    var team_members = nga.entity('team_members');
+    var team_members = nga.entity('teammembers');
 
     // pitchers
     var createPitchers = require('./models/pitchers');
@@ -213,11 +211,11 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
 
     // pitcher workload
     var createPitcherWorkload = require('./models/pitcher_workload');
-    var pitcher_workload = nga.entity('pitcher_workload');
+    var pitcher_workload = nga.entity('pitcher-workload');
 
     // pitching data
     var createPitchingData = require('./models/pitching_data');
-    var pitching_data = nga.entity('pitching_data');
+    var pitching_data = nga.entity('pitching-data');
 
     // app issues
     var createIssue = require('./models/issues');
@@ -247,11 +245,11 @@ myApp.config(['NgAdminConfigurationProvider','RestangularProvider',
         .addChild(nga.menu(nga.entity('users')).title('Users').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
         .addChild(nga.menu().template(`<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Team Info</a>`))
             .addChild(nga.menu(nga.entity('teams')).title('Teams').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
-            .addChild(nga.menu(nga.entity('team_members')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
+            .addChild(nga.menu(nga.entity('teammembers')).title('Team Members').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
         .addChild(nga.menu().template(`<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; Pitcher Info</a>`))
             .addChild(nga.menu(nga.entity('pitchers')).title('Pitchers').icon('<span class="glyphicon glyphicon-user"></span>&nbsp;'))
-            .addChild(nga.menu(nga.entity('pitcher_workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))
-            .addChild(nga.menu(nga.entity('pitching_data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;'))
+            .addChild(nga.menu(nga.entity('pitcher-workload')).title('Pitcher Workload').icon('<span class="glyphicon glyphicon-list-alt"></span>&nbsp;'))
+            .addChild(nga.menu(nga.entity('pitching-data')).title('Pitching Data').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;'))
             .addChild(nga.menu(nga.entity('injuries')).title('Pitcher Injuries').icon('<span class="glyphicon glyphicon-file"></span>&nbsp;'))
         .addChild(nga.menu().template(`<a class="menu-heading"><span class="glyphicon glyphicon-folder-open"></span>&nbsp; App Info</a>`))
             .addChild(nga.menu(nga.entity('issues')).title('Issues').icon('<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;'))

@@ -1,6 +1,6 @@
 {
   "name": "AndrisaniSportsAdmin",
-  "version": "1",
+  "version": "1.0.0",
   "description": "Admin for pitcher diagnostic device",
   "author": "Matt Eckman, Steve Roettger",
   "scripts": {

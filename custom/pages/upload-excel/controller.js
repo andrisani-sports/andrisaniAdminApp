@@ -283,7 +283,7 @@ console.log('lastArray',lastArray);
 
         // CHECK: see if lines already saved
         var getForPitcher = { pitcher: pitcherId};
-        Restangular.one('pitching_data').get(getForPitcher)
+        Restangular.one('pitching-data').get(getForPitcher)
         .then(function(result){
             result = result.plain();
 
@@ -308,12 +308,12 @@ console.log('lastArray',lastArray);
                         pitcher: pitcherId,
                         pulls: dataArray[i][5]
                     };
-                    promises.push(Restangular.all('pitching_data').customPOST(data));
+                    promises.push(Restangular.all('pitching-data').customPOST(data));
                 }
             }
 // notification.log(uploaded + ' were uploaded, ' + notUploaded + ' were not uploaded.');
             $q.all(promises).then(function(result){
-                // result contains array of all objects saved in Stamplay (as Restangular objects)
+                // result contains array of all objects saved in api backend (as Restangular objects)
                 // to get just the data, on each result do:
                 //   var line = result[0].plain();
                 notification.log(uploaded + ' were uploaded, ' + notUploaded + ' were not uploaded.');

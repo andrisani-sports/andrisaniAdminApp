@@ -23,7 +23,7 @@ function pitcherChartDirective(Restangular){
     var data = {
       pitcher: pitcherId
     }
-    Restangular.one('pitching_data').get(data)
+    Restangular.one('pitching-data').get(data)
     .then(function(result){
       result = result.data.plain();
 

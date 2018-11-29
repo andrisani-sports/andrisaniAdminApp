@@ -23,28 +23,45 @@ module.exports = function(myApp) {
 
 	        if (operation == 'getList') {
 	            // FIX PAGINATION
-	            // STAMPLAY CANONICAL URL IS:
-	            // https://bkschool.stamplayapp.com/api/cobject/v1/audio
-	            // ? n=10 & sort=audio_url & page=1 & per_page=10
+				// NgAdmin automatically adds these pagination parameters to a query: _page, _perPage, 
+				// _sortField, _sortDir. Map those fields to the right query for RestDB
+				// -------
+				// REST DB
+				// -------
+				// sort	= add multiple fields by simply adding another sort parameter. Default: sort=_id
+				// Example: https://mydb-fafc.restdb.io/rest/people?q={}&sort=lastname
+				// dir = allowed values are 1 (ascending) and -1 (descending). Used together with sort. 
+				// Multiple dir parameters can be used in conjunction with sort.
+				// Example: https://mydb-fafc.restdb.io/rest/people?q={}&dir=-1
+				// skip = here to start in the result set
+				// Example: https://mydb-fafc.restdb.io/rest/people?skip=100
+				// max = Maximum number of records retrieved.
+				// Example: https://mydb-fafc.restdb.io/rest/people?max=20
+				// totals = &totals=true returns an object with both data and total count. Totals equals to max parameter or default 1000
+				// Example: output from query ->{data: [ … ], totals: { total: 100, count: 40, skip: 0, max: 1000}}
 
-	            if(!params.page){
-	                params.page = params._page;
-	            }
+				if(params._page){
+					if(!params.skip){
+						params.skip = (params._page - 1) * params._perPage;
+					}
+				}
 	            if(!params.per_page){
 	                params.per_page = params._perPage;
 	            }
 	            if(params._sortField){
-	                params.sort = '';
-	                if(params._sortDir == 'DESC') params.sort = '-';
-	                 params.sort += params._sortField;
-	            }
+	                params.sort = params._sortField;
+				}
+				if(params._sortDir == 'DESC'){
+					params.dir = '-1';
+				}else{
+					params.dir = '1';
+				}
+
 	            delete params._page;
 	            delete params._perPage;
 	            delete params._sortField;
 	            delete params._sortDir;
 	        }
-
-	        //console.log('params post Stamplay processing:',params);
 
 	        return { element: element, params: params };
 	    });
@@ -58,7 +75,7 @@ module.exports = function(myApp) {
 	    $httpProvider.interceptors.unshift(addContentTypeToHeader);
 
 	    // these functions run in regular order (after Restangular interceptors)
-	    $httpProvider.interceptors.push(fixStamplayIssues);
+	    $httpProvider.interceptors.push(fixReqIssues);
 
 
 	    /*
@@ -66,7 +83,7 @@ module.exports = function(myApp) {
 	     */
 
 	    // Angular removes the header 'Content-Type' if request is GET.
-	    // This function is a hack to add the header back in, because Stamplay 
+	    // This function is a hack to add the header back in, because RestDB 
 	    // requires the header.
 	    function addContentTypeToHeader() {
 	        return {
@@ -81,11 +98,15 @@ module.exports = function(myApp) {
 	        }
 	    }
 
-	    function fixStamplayIssues($q) {
+	    function fixReqIssues($q) {
 	        return {
 	            request : function(config) {
 
-	                config = angular.copy(config);
+					config = angular.copy(config);
+				
+				/**
+				 * POST
+				 */
 	                if(config.method == 'POST'){
 	                	for(var i in config.data){
 	                		if(config.data[i] === null){
@@ -103,11 +124,15 @@ module.exports = function(myApp) {
 	             		}
 	             		
 	                }
-
+				
+				/**
+				 * PUT
+				 */
 	                // When NG-Admin does a list GET, it receives all fields for 
-	                // that data model, and those fields persist in the dataStore, 
-	                // even if the editionView only defines a couple of fields. 
-	                // Which means that the un-editable fields in Stamplay must be 
+					// that data model, including the RestDB system fields, and 
+					// those fields persist in the dataStore even if the editionView 
+					// only defines a couple of fields. 
+	                // Which means that the un-editable fields in RestDB must be 
 	                // removed before doing a PUT
 	                if(config.method === 'PUT'){
 
@@ -127,8 +152,8 @@ module.exports = function(myApp) {
 		                	}
 	                	}
 
-	                	// zones_arr is an array of strings in Stamplay, needs
-	                	// processing
+	                	// zones_arr is an array of strings in RestDB (?), needs
+	                	// processing (?)
 	                	if(config.data && config.data.zones_arr){
 	             			var zones = config.data.zones_arr;
 	             			for(var i in zones){
@@ -142,18 +167,22 @@ module.exports = function(myApp) {
 	                	if(config.file){
 	                		// PLACEHOLDER FOR FUTURE CODE
 	                	}else{
-		                    delete config.data.__v;
+							// RESTDB SYSTEM FIELDS
+							// _created, _changed, _createdby, changedby, _id, _parent_id, _version
+		                    delete config.data.__version;
 		                    delete config.data._id;
-		                    delete config.data.appId;
-		                    delete config.data.cobjectId;
-		                    delete config.data.dt_create;
-		                    delete config.data.dt_update;
-		                    delete config.data.id;
-		                    delete config.data.actions;
+							delete config.data._created;
+							delete config.data._createdby;
+							delete config.data._changed;
+							delete config.data._changedby;
+							delete config.data._parent_id;
 	                	}
 	                }
 
-	                // translate NGAdmin filter(s) to Stamplay format
+				/**
+				 * GET
+				 */
+	                // translate NGAdmin filter(s) to RestDB format
 	                if(config.method == 'GET' && config.params){
 	                    var where = {};
 
@@ -162,7 +191,7 @@ module.exports = function(myApp) {
 	                    if(config.params._filters && '[object Object]' in config.params._filters){
 	                        var temp = config.params._filters['[object Object]'];
 	                        delete config.params._filters['[object Object]'];
-	                        where.chatRoomId = temp; // Stamplay uses a straight key:value pair in GET
+	                        where.chatRoomId = temp; // RestDB uses a straight key:value pair in GET (?)
 	                    }
 
 	                    if(config.params._filters){
@@ -260,33 +289,15 @@ module.exports = function(myApp) {
 
 	    RestangularProvider.addResponseInterceptor(function(data,operation,what,url,response,deferred){
 
-			//console.log('in addResponseInterceptor');
+			var newResponse = response.data;
 
-	        var newResponse;
-	        //console.log('Response',response);
-	        //console.log(typeof response.data.data);
-	        //console.log('Data',data);
-
-	        // ADJUST STAMPLAY'S STRUCTURE TO MATCH WHAT NG-ADMIN EXPECTS
-	        if('data' in response.data){
-	            var newData = response.data.data;
-	            if(newData.length > 0){
-	                newResponse = response.data.data;
-	            }else{
-	                newResponse = [];
-	            }
-	        }else{
-	            newResponse = response.data;
-	        }
-
-	        // FIX PAGINATION
-	        if (operation == "getList") {
-	            var contentRange = data.pagination.total_elements;
-	            //console.log('num of entries retrieved by Restangular',contentRange);
-	            response.totalCount = contentRange;
-	        }
-
-			//console.log('newResponse',newResponse);
+			if(newResponse.length){
+				for(var i in newResponse){
+					newResponse[i].id = newResponse[i]._id;
+				}
+			}else{
+				newResponse.id = newResponse._id;
+			}
 
 	        return newResponse;
 

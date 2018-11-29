@@ -47,7 +47,7 @@ module.exports = function(nga,pitcher_workload,pitchers,user) {
           .targetField(nga.field('unique_id')),
 	      nga.field('game_date', 'date').label('Game Date'),
 	      nga.field('number_innings').label('Inning Count'),
-	      nga.field('number_pitches').label('Ptich Count'),
+	      nga.field('number_pitches').label('Pitch Count'),
 	      nga.field('note', 'wysiwyg')
     		
 			])
